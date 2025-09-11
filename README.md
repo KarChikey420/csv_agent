@@ -23,8 +23,8 @@ A Streamlit app for performing Exploratory Data Analysis (EDA) on CSV files usin
 
 1. **Clone the repository**
     ```bash
-    git clone <repo_url>
-    cd <repo_folder>
+    git clone https://github.com/KarChikey420/csv_agent.git
+    cd csv_agent
     ```
 
 2. **Create a virtual environment (recommended)**
