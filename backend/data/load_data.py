@@ -4,7 +4,7 @@ DATAFRAME=None
 FILE_NAME=None
 SUMMARY_CACHE=None
 
-def load_data(df:pd.DataFrame,file_name:str=None):
+def load_dataframe(df:pd.DataFrame,file_name:str=None):
     global DATAFRAME,FILE_NAME,SUMMARY_CACHE
     DATAFRAME=df
     FILE_NAME=file_name
