@@ -7,6 +7,4 @@ def load_llm():
         google_api_key=GOOGLE_API_KEY,
         temperature=0.2
     )
-if __name__ == "__main__":
-    llm = load_llm()
-    print(llm.invoke("Hello, world!"))
+
