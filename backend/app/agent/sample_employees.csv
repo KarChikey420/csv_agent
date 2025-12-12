@@ -1,0 +1,8 @@
+id,name,department,salary,age,city
+1,Alice,HR,50000.0,25.0,Delhi
+2,Bob,IT,60000.0,30.0,Mumbai
+3,Charlie,IT,70000.0,35.0,Delhi
+4,David,Finance,,40.0,Bangalore
+5,Eva,HR,55000.0,,Delhi
+6,Frank,Finance,65000.0,28.0,Mumbai
+7,Grace,IT,60000.0,30.0,Mumbai

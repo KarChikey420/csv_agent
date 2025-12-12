@@ -1,18 +1,6 @@
 import pandas as pd
 
-DATAFRAME=None
-FILE_NAME=None
-SUMMARY_CACHE=None
-
-def load_dataframe(df:pd.DataFrame,file_name:str=None):
-    global DATAFRAME,FILE_NAME,SUMMARY_CACHE
-    DATAFRAME=df
-    FILE_NAME=file_name
-    SUMMARY_CACHE=None
-    
-    if DATAFRAME is None:
-        raise ValueError("No Dataset Uploaded yet")
-    
-    return DATAFRAME
-
+def load_dataframe(file_name:str=None):
+    df=pd.read_csv(file_name)
+    return df
         
