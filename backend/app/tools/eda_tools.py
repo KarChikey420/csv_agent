@@ -1,13 +1,13 @@
-from data.load_data import load_dataframe
+from ..data.load_data import load_dataframe
 
-def df_summary():
-    df=load_dataframe()
+def df_summary(file_path):
+    df=load_dataframe(file_path)
     return df.describe(include="all").to_string()
  
-def df_shape():
-    df=load_dataframe()
+def df_shape(file_path="app/agent/sample_employees.csv"):
+    df=load_dataframe(file_path)
     return f"Rows:{df.shape[0]},Columns:{df.shape[1]}"
 
-def column_list():
-    df=load_dataframe()
+def column_list(file_path="app/agent/sample_employees.csv"):
+    df=load_dataframe(file_path)
     return ", ".join(df.columns)

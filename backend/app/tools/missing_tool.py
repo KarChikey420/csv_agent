@@ -1,7 +1,7 @@
-from data.load_data import load_dataframe
+from ..data.load_data import load_dataframe
 
-def find_missing():
-    df=load_dataframe()
+def find_missing(file_path):
+    df=load_dataframe(file_path)
     
     missing=df.isna().sum()
     total_missing=missing.sum()
