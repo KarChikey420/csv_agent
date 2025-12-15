@@ -100,7 +100,6 @@ def memory_agent_endpoint(request: ChatRequest, db: Session = Depends(get_db), u
     response = run_memory_chat(request.query)
     return {"response": response}
 
-# Keep /chat as alias for react agent for backward compatibility or default usage
 @app.post("/chat")
 def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
     file_path = save_upload_file(file)
