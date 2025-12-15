@@ -1,5 +1,4 @@
-from fastapi import FastAPI,Request,HTTPException
-from fastapi import FastAPI,Depends,HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -8,6 +7,11 @@ from .dbsetup.database import SessionLocal, User
 from .dbsetup.auth import create_access_token, current_user
 import bcrypt
 import uuid 
+from .agent.react_agent import run_react_agent
+from .agent.multi_agent import run_multi_agent
+from .agent.rag_store import run_memory_chat
+import shutil
+import os
 
 app=FastAPI()
 
@@ -41,6 +45,9 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class ChatRequest(BaseModel):
+    query: str
+
 @app.post("/signup")
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == request.email).first()
@@ -65,3 +72,39 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+def save_upload_file(file: UploadFile) -> str:
+    if not file:
+        return None
+    upload_dir = os.path.join(os.getcwd(), "temp_data")
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return file_path
+
+@app.post("/agent/react")
+def react_agent_endpoint(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
+    file_path = save_upload_file(file)
+    response = run_react_agent(query, file_path)
+    return {"response": response}
+
+@app.post("/agent/multi")
+def multi_agent_endpoint(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
+    file_path = save_upload_file(file)
+    response = run_multi_agent(query, file_path)
+    return {"response": response}
+
+@app.post("/agent/memory")
+def memory_agent_endpoint(request: ChatRequest, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    response = run_memory_chat(request.query)
+    return {"response": response}
+
+# Keep /chat as alias for react agent for backward compatibility or default usage
+@app.post("/chat")
+def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
+    file_path = save_upload_file(file)
+    response = run_react_agent(query, file_path)
+    return {"response": response}
+
+

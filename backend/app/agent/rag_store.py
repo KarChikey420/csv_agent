@@ -1,11 +1,11 @@
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import LLMChain
-from llm_loder import llm
+from ..llm_loder.llm import load_llm
 
 memory = ConversationBufferMemory()
 
 chat_chain = LLMChain(
-    llm=llm(),
+    llm=load_llm(),
     memory=memory
 )
 

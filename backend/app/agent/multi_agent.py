@@ -1,20 +1,25 @@
 from langchain.agents import initialize_agent, AgentType
 from langchain.tools import Tool
-from app.llm_loder.llm import load_llm
-from app.data.load_data import load_dataframe
-from app.tools.missing_tool import find_missing
-from app.tools.outlier import find_outlier
-from app.tools.correlation import get_correlation
-from app.tools.eda_tools import df_summary
+import os
+from ..llm_loder.llm import load_llm
+from ..data.load_data import load_dataframe
+from ..tools.missing_tool import find_missing
+from ..tools.outlier import find_outlier
+from ..tools.correlation import get_correlation
+from ..tools.eda_tools import df_summary
 
-def run_multi_agent(query):
-    df = load_dataframe()
+def run_multi_agent(query:str, file_path:str=None):
+    if not file_path:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(current_dir, "sample_employees.csv")
+    
+    df = load_dataframe(file_path)
     llm_instance = load_llm()
 
     tools = [
         Tool(
             name="missing_values",
-            func=lambda q: find_missing(),
+            func=lambda q: find_missing(file_path),
             description="Detect missing values"
         ),
         Tool(
@@ -24,12 +29,12 @@ def run_multi_agent(query):
         ),
         Tool(
             name="correlation_matrix",
-            func=lambda q: get_correlation(),
+            func=lambda q: get_correlation(file_path),
             description="Correlation matrix"
         ),
         Tool(
             name="dataset_summary",
-            func=lambda q: df_summary(),
+            func=lambda q: df_summary(file_path),
             description="Summary statistics"
         ),
     ]
