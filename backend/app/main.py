@@ -12,6 +12,7 @@ from .agent.multi_agent import run_multi_agent
 from .agent.rag_store import run_memory_chat
 import shutil
 import os
+import uvicorn
 
 app=FastAPI()
 
@@ -107,3 +108,4 @@ def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = De
     return {"response": response}
 
 
+    
