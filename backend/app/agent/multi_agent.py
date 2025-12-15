@@ -7,12 +7,20 @@ from ..tools.missing_tool import find_missing
 from ..tools.outlier import find_outlier
 from ..tools.correlation import get_correlation
 from ..tools.eda_tools import df_summary
+from ..tools.plot_tool import generate_plot
+from ..tools.report_tool import generate_report
+
+def plot_wrapper(df, query):
+    try:
+        parts = query.split(',')
+        column = parts[0].strip()
+        plot_type = parts[1].strip() if len(parts) > 1 else "hist"
+        return generate_plot(df, column, plot_type)
+    except Exception as e:
+        return f"Error generating plot: {str(e)}"
+
 
 def run_multi_agent(query:str, file_path:str=None):
-    if not file_path:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_dir, "sample_employees.csv")
-    
     df = load_dataframe(file_path)
     llm_instance = load_llm()
 
@@ -37,6 +45,17 @@ def run_multi_agent(query:str, file_path:str=None):
             func=lambda q: df_summary(file_path),
             description="Summary statistics"
         ),
+        Tool(
+            name="generate_plot",
+            func=lambda q: plot_wrapper(df, q),
+            description="Generate a plot. Input: 'column_name, plot_type'. plot_type: hist, box, line."
+        ),
+        Tool(
+            name="generate_report",
+            func=lambda q: generate_report(df),
+            description="Generate a full EDA report of the dataset."
+        ),
+
     ]
 
     agent = initialize_agent(
@@ -48,6 +67,4 @@ def run_multi_agent(query:str, file_path:str=None):
 
     return agent.run(query)
 
-if __name__ == "__main__":
-    query = "What is the correlation between the columns?"
-    print(run_multi_agent(query))
+

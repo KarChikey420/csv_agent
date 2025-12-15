@@ -1,7 +1,7 @@
-from missing_tool import find_missing
-from correlation import get_correlation
-from outlier import find_outlier
-from eda_tools import df_summary,df_shape ,column_list
+from .missing_tool import find_missing
+from .correlation import get_correlation
+from .outlier import find_outlier
+from .eda_tools import df_summary,df_shape ,column_list
 
 def generate_report(df):
     """
