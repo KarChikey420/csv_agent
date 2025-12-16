@@ -83,7 +83,3 @@ This application provides advanced Exploratory Data Analysis (EDA) and visualiza
 - "What are the most correlated columns?"
 - "Check for missing values and data quality issues"
 
-### Custom Visualization Examples
-- "Create a scatter plot showing the relationship between age and salary, colored by department"
-- "Show the distribution of sales by month with trend lines"
-- "Create a heatmap of customer satisfaction scores by region and product category"
