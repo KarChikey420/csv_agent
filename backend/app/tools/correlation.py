@@ -1,6 +1,6 @@
 from ..data.load_data import load_dataframe
 
-def get_correlation(file_path="app/agent/sample_employees.csv"):
+def get_correlation(file_path=str)->str:
     df=load_dataframe(file_path)
     
     corr=df.select_dtypes(include="number").corr()
