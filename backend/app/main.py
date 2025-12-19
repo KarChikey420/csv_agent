@@ -77,7 +77,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 def save_upload_file(file: UploadFile) -> str:
-    if not file:
+    if not file or not file.filename:
         return None
     upload_dir = os.path.join(os.getcwd(), "temp_data")
     os.makedirs(upload_dir, exist_ok=True)

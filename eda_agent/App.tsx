@@ -29,8 +29,8 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1d] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -40,14 +40,22 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] flex text-gray-100">
+    <div className="min-h-screen bg-background text-foreground flex overflow-hidden relative selection:bg-primary/20">
+      {/* Ambient Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px] animate-blob" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+        <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-purple-500/5 rounded-full blur-[100px] animate-blob animation-delay-4000" />
+      </div>
+
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onLogout={handleLogout}
       />
-      <main className="flex-1 ml-64 p-8 min-h-screen flex flex-col bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
-        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
+      
+      <main className="flex-1 ml-64 p-6 min-h-screen flex flex-col relative z-10 transition-all duration-300">
+        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col animate-fade-in">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === AgentType.REACT && <ChatInterface type={AgentType.REACT} />}
           {activeTab === AgentType.MULTI && <ChatInterface type={AgentType.MULTI} />}

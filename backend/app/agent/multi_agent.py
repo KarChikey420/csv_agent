@@ -21,6 +21,8 @@ def plot_wrapper(df, query):
 
 
 def run_multi_agent(query:str, file_path:str=None):
+    if file_path is None:
+        return "Please upload a CSV file to perform data analysis."
     df = load_dataframe(file_path)
     llm_instance = load_llm()
 

@@ -3,6 +3,8 @@ from ..llm_loder.llm import load_llm
 from ..data.load_data import load_dataframe
 
 def run_react_agent(query:str,file_path:str=None):
+    if file_path is None:
+        return "Please upload a CSV file to perform data analysis."
     df = load_dataframe(file_path)
 
     llm=load_llm()
