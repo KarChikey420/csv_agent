@@ -1,0 +1,8 @@
+{
+  "name": "Copy of EDA Agent Command Center",
+  "description": "Advanced Exploratory Data Analysis platform powered by ReAct reasoning and Multi-Agent workflows for automated data cleaning, analysis, and visualization.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
