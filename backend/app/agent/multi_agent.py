@@ -62,9 +62,16 @@ def run_multi_agent(query:str, file_path:str=None):
         tools=tools,
         llm=llm_instance,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=True
+        verbose=True,
+        handle_parsing_errors=True
     )
 
-    return agent.run(query)
+    try:
+        result = agent.invoke({"input": query})
+        return result.get("output", str(result))
+    except Exception as e:
+        if "parsing" in str(e).lower():
+            return str(e).split("Could not parse LLM output: `")[1].split("`")[0] if "Could not parse LLM output: `" in str(e) else str(e)
+        raise e
 
 

@@ -16,8 +16,7 @@ import uvicorn
 
 app=FastAPI()
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -89,26 +88,49 @@ def save_upload_file(file: UploadFile) -> str:
 
 @app.post("/agent/react")
 def react_agent_endpoint(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
-    file_path = save_upload_file(file)
-    response = run_react_agent(query, file_path)
-    return {"response": response}
+    try:
+        file_path = save_upload_file(file)
+        response = run_react_agent(query, file_path)
+        return {"response": response}
+    except Exception as e:
+        print(f"Error in react_agent_endpoint: {str(e)}")
+        if "quota" in str(e).lower() or "429" in str(e):
+            raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
+        raise HTTPException(500, f"Agent processing failed: {str(e)}")
 
 @app.post("/agent/multi")
 def multi_agent_endpoint(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
-    file_path = save_upload_file(file)
-    response = run_multi_agent(query, file_path)
-    return {"response": response}
+    try:
+        file_path = save_upload_file(file)
+        response = run_multi_agent(query, file_path)
+        return {"response": response}
+    except Exception as e:
+        print(f"Error in multi_agent_endpoint: {str(e)}")
+        if "quota" in str(e).lower() or "429" in str(e):
+            raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
+        raise HTTPException(500, f"Agent processing failed: {str(e)}")
 
 @app.post("/agent/memory")
 def memory_agent_endpoint(request: ChatRequest, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    response = run_memory_chat(request.query)
-    return {"response": response}
+    try:
+        response = run_memory_chat(request.query)
+        return {"response": response}
+    except Exception as e:
+        if "quota" in str(e).lower() or "429" in str(e):
+            raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
+        raise HTTPException(500, f"Agent processing failed: {str(e)}")
 
 @app.post("/chat")
 def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
-    file_path = save_upload_file(file)
-    response = run_react_agent(query, file_path)
-    return {"response": response}
+    try:
+        file_path = save_upload_file(file)
+        response = run_react_agent(query, file_path)
+        return {"response": response}
+    except Exception as e:
+        print(f"Error in chat endpoint: {str(e)}")
+        if "quota" in str(e).lower() or "429" in str(e):
+            raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
+        raise HTTPException(500, f"Agent processing failed: {str(e)}")
 
 
     
