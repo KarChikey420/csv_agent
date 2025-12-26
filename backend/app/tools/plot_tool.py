@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
@@ -20,4 +22,5 @@ def generate_plot(df, column, plot_type="hist"):
     buffer.seek(0)
     plt.close()
 
-    return base64.b64encode(buffer.read()).decode()
+    image_base64 = base64.b64encode(buffer.read()).decode()
+    return f"![Plot](data:image/png;base64,{image_base64})"
