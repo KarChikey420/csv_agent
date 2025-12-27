@@ -1,5 +1,6 @@
-from langchain.agents import initialize_agent, AgentType
+from langchain.agents import create_react_agent, AgentExecutor
 from langchain.tools import Tool
+from langchain import hub
 import os
 from ..llm_loder.llm import load_llm
 from ..data.load_data import load_dataframe
@@ -60,16 +61,22 @@ def run_multi_agent(query:str, file_path:str=None):
 
     ]
 
-    agent = initialize_agent(
+    # Get the react prompt template
+    prompt = hub.pull("hwchase17/react")
+    
+    # Create the react agent
+    agent = create_react_agent(llm_instance, tools, prompt)
+    
+    # Create agent executor
+    agent_executor = AgentExecutor(
+        agent=agent,
         tools=tools,
-        llm=llm_instance,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
         verbose=True,
         handle_parsing_errors=True
     )
 
     try:
-        result = agent.invoke({"input": query})
+        result = agent_executor.invoke({"input": query})
         return result.get("output", str(result))
     except Exception as e:
         if "parsing" in str(e).lower():
