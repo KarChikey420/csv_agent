@@ -1,10 +1,15 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
-from ..config.setting import GOOGLE_API_KEY, MODEL_NAME
+from langchain_openai import ChatOpenAI
+from ..config.setting import GROQ_API_KEY, MODEL_NAME
 
 def load_llm():
-    return ChatGoogleGenerativeAI(
+    if not GROQ_API_KEY:
+        raise ValueError("Missing GROQ_KEY in environment variables")
+        
+    return ChatOpenAI(
         model=MODEL_NAME,
-        google_api_key=GOOGLE_API_KEY,
-        temperature=0.2
+        api_key=GROQ_API_KEY,
+        base_url="https://api.groq.com/openai/v1",
+        temperature=0.7,
+        max_tokens=800,
     )
 
