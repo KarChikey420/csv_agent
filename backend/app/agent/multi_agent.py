@@ -11,21 +11,37 @@ from ..tools.eda_tools import df_summary
 from ..tools.plot_tool import generate_plot
 from ..tools.report_tool import generate_report
 
-def plot_wrapper(df, query):
-    try:
-        parts = query.split(',')
-        column = parts[0].strip()
-        plot_type = parts[1].strip() if len(parts) > 1 else "hist"
-        return generate_plot(df, column, plot_type)
-    except Exception as e:
-        return f"Error generating plot: {str(e)}"
-
-
 def run_multi_agent(query:str, file_path:str=None):
     if file_path is None:
         return "Please upload a CSV file to perform data analysis."
     df = load_dataframe(file_path)
     llm_instance = load_llm()
+
+    # Capture plots
+    plots = []
+
+    def plot_wrapper_captured(q):
+        try:
+            parts = q.split(',')
+            column = parts[0].strip()
+            plot_type = parts[1].strip() if len(parts) > 1 else "hist"
+            result_plot = generate_plot(df, column, plot_type)
+            if "![Plot]" in str(result_plot):
+                plots.append(result_plot)
+            return result_plot
+        except Exception as e:
+            return f"Error generating plot: {str(e)}"
+
+    # Generate Data Snapshot
+    data_snapshot = f"""
+### Data Snapshot
+**Columns**: {list(df.columns)}
+
+**Sample Data**:
+```text
+{df.head().to_string()}
+```
+"""
 
     tools = [
         Tool(
@@ -50,7 +66,7 @@ def run_multi_agent(query:str, file_path:str=None):
         ),
         Tool(
             name="generate_plot",
-            func=lambda q: plot_wrapper(df, q),
+            func=plot_wrapper_captured,
             description="Generate a plot. Input: 'column_name, plot_type'. plot_type: hist, box, line."
         ),
         Tool(
@@ -77,9 +93,17 @@ def run_multi_agent(query:str, file_path:str=None):
 
     try:
         result = agent_executor.invoke({"input": query})
-        return result.get("output", str(result))
+        output = result.get("output", str(result))
+        
+        # Construct final response
+        final_response = f"{data_snapshot}\n\n{output}"
+        if plots:
+            final_response += "\n\n### Generated Plots\n" + "\n".join(plots)
+            
+        return final_response
     except Exception as e:
         if "parsing" in str(e).lower():
+            # Attempt to recover output even on parsing error
             return str(e).split("Could not parse LLM output: `")[1].split("`")[0] if "Could not parse LLM output: `" in str(e) else str(e)
         raise e
 
