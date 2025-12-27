@@ -12,11 +12,15 @@ def run_react_agent(query:str,file_path:str=None):
                                         df=df,
                                         verbose=True,
                                         allow_dangerous_code=True,
-                                        handle_parsing_errors=True)
+                                        agent_executor_kwargs={"handle_parsing_errors": True})
     try:
         result = agent.invoke({"input": query})
         return result.get("output", str(result))
     except Exception as e:
-        if "parsing" in str(e).lower():
-            return str(e).split("Could not parse LLM output: `")[1].split("`")[0] if "Could not parse LLM output: `" in str(e) else str(e)
+        error_msg = str(e)
+        if "parsing" in error_msg.lower():
+            if "Could not parse LLM output: `" in error_msg:
+                return error_msg.split("Could not parse LLM output: `")[1].split("`")[0]
+            elif "Could not parse LLM output: " in error_msg:
+                return error_msg.split("Could not parse LLM output: ")[1]
         raise e
