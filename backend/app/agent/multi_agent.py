@@ -28,11 +28,11 @@ def run_multi_agent(query:str, file_path:str=None):
             result_plot = generate_plot(df, column, plot_type)
             if "![Plot]" in str(result_plot):
                 plots.append(result_plot)
+                return "Plot generated successfully."
             return result_plot
         except Exception as e:
             return f"Error generating plot: {str(e)}"
 
-    # Generate Data Snapshot
     data_snapshot = f"""
 ### Data Snapshot
 **Columns**: {list(df.columns)}
@@ -77,13 +77,10 @@ def run_multi_agent(query:str, file_path:str=None):
 
     ]
 
-    # Get the react prompt template
     prompt = hub.pull("hwchase17/react")
     
-    # Create the react agent
     agent = create_react_agent(llm_instance, tools, prompt)
     
-    # Create agent executor
     agent_executor = AgentExecutor(
         agent=agent,
         tools=tools,
@@ -95,7 +92,6 @@ def run_multi_agent(query:str, file_path:str=None):
         result = agent_executor.invoke({"input": query})
         output = result.get("output", str(result))
         
-        # Construct final response
         final_response = f"{data_snapshot}\n\n{output}"
         if plots:
             final_response += "\n\n### Generated Plots\n" + "\n".join(plots)
@@ -103,7 +99,6 @@ def run_multi_agent(query:str, file_path:str=None):
         return final_response
     except Exception as e:
         if "parsing" in str(e).lower():
-            # Attempt to recover output even on parsing error
             return str(e).split("Could not parse LLM output: `")[1].split("`")[0] if "Could not parse LLM output: `" in str(e) else str(e)
         raise e
 
