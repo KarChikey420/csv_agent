@@ -6,10 +6,12 @@ from sqlalchemy.orm import Session
 from .dbsetup.database import SessionLocal, User
 from .dbsetup.auth import create_access_token, current_user
 import bcrypt
+import pandas as pd
 import uuid 
 from .agent.react_agent import run_react_agent
 from .agent.multi_agent import run_multi_agent
 from .agent.rag_store import run_memory_chat
+from .data.load_data import load_dataframe
 import shutil
 import os
 import uvicorn
@@ -131,6 +133,30 @@ def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = De
         if "quota" in str(e).lower() or "429" in str(e):
             raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
         raise HTTPException(500, f"Agent processing failed: {str(e)}")
+
+
+@app.post("/data/preview")
+def preview_data(file: UploadFile = File(...)):
+    try:
+        file_path = save_upload_file(file)
+        if not file_path:
+             raise HTTPException(400, "File upload failed")
+        
+        df = load_dataframe(file_path)
+        
+        # Convert NaN to None for JSON compatibility
+        df = df.where(pd.notnull(df), None)
+        
+        preview = {
+            "filename": file.filename,
+            "columns": list(df.columns),
+            "head": df.head().to_dict(orient="records"),
+            "shape": df.shape
+        }
+        return preview
+    except Exception as e:
+        print(f"Error in preview endpoint: {str(e)}")
+        raise HTTPException(500, f"Preview failed: {str(e)}")
 
 
     

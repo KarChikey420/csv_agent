@@ -25,6 +25,13 @@ export interface ApiResponse {
   response: string;
 }
 
+export interface DataPreviewResponse {
+  filename: string;
+  columns: string[];
+  head: any[];
+  shape: number[];
+}
+
 export const authService = {
   signup: async (name: string, email: string, password: string) => {
     const response = await api.post('/signup', { name, email, password });
@@ -89,5 +96,14 @@ export const agentService = {
   memoryAgent: async (query: string): Promise<string> => {
     const response = await api.post<ApiResponse>('/agent/memory', { query });
     return response.data.response;
+  },
+
+  previewData: async (file: File): Promise<DataPreviewResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<DataPreviewResponse>('/data/preview', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
   }
 };

@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Upload, FileText, Loader2, Sparkles, Terminal, AlertCircle, Play } from 'lucide-react';
 import { AgentType } from '../types';
-import { agentService } from '../services/apiService';
+import { agentService, DataPreviewResponse } from '../services/apiService';
+import { Database } from 'lucide-react';
 
 interface AgentFormProps {
   type: AgentType;
@@ -15,6 +16,10 @@ const AgentForm: React.FC<AgentFormProps> = ({ type }) => {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [preview, setPreview] = useState<DataPreviewResponse | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,9 +53,24 @@ const AgentForm: React.FC<AgentFormProps> = ({ type }) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      setPreview(null);
+      setPreviewError(null);
+
+      // Fetch preview
+      setPreviewLoading(true);
+      try {
+        const data = await agentService.previewData(selectedFile);
+        setPreview(data);
+      } catch (err) {
+        console.error("Preview failed", err);
+        setPreviewError("Failed to load data preview. You can still run the agent.");
+      } finally {
+        setPreviewLoading(false);
+      }
     }
   };
 
@@ -132,15 +152,67 @@ const AgentForm: React.FC<AgentFormProps> = ({ type }) => {
                       className="hidden"
                     />
                     {file ? (
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <FileText className="w-8 h-8 text-primary mx-auto mb-2" />
                         <p className="text-sm font-medium text-foreground">{file.name}</p>
                         <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+
+                        {previewLoading && (
+                          <div className="mt-4 flex flex-col items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <span className="text-xs text-muted-foreground">Loading preview...</span>
+                          </div>
+                        )}
+
+                        {previewError && (
+                          <div className="mt-2 text-xs text-destructive bg-destructive/10 p-2 rounded">
+                            {previewError}
+                          </div>
+                        )}
+
+                        {preview && (
+                          <div className="mt-4 w-full text-left bg-black/20 rounded-lg p-3 border border-white/5 overflow-hidden">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <Database className="w-3 h-3" /> Data Preview
+                            </p>
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {preview.columns.map((col, idx) => (
+                                <span key={idx} className="text-[10px] px-2 py-0.5 bg-primary/20 text-primary rounded-full border border-primary/10">
+                                  {col}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-[10px] text-left">
+                                <thead>
+                                  <tr className="border-b border-white/10">
+                                    {preview.columns.map((col, idx) => (
+                                      <th key={idx} className="pb-1 text-muted-foreground font-medium pr-2 whitespace-nowrap">{col}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {preview.head.map((row, idx) => (
+                                    <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+                                      {preview.columns.map((col, colIdx) => (
+                                        <td key={colIdx} className="py-1 text-foreground/80 pr-2 whitespace-nowrap">{row[col]}</td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="mt-2 text-[10px] text-muted-foreground">
+                              Total Shape: {preview.shape[0]} rows x {preview.shape[1]} columns
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="text-center">
                         <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary mb-2 transition-colors" />
                         <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Click to upload file</p>
+                        <p className="text-xs text-muted-foreground mt-1">and see instant preview</p>
                       </div>
                     )}
                   </div>
