@@ -135,6 +135,18 @@ def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = De
         raise HTTPException(500, f"Agent processing failed: {str(e)}")
 
 
+@app.get("/api/plots/{filename}")
+def serve_plot(filename: str):
+    # Use the same path structure as plot_tool.py
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    plots_dir = os.path.join(backend_dir, "app", "temp_data", "plots")
+    file_path = os.path.join(plots_dir, filename)
+    print(f"Looking for plot at: {file_path}")
+    print(f"File exists: {os.path.exists(file_path)}")
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="image/png")
+    raise HTTPException(404, f"Plot not found: {filename} at {file_path}")
+
 @app.post("/data/preview")
 def preview_data(file: UploadFile = File(...)):
     try:

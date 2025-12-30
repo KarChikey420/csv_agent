@@ -138,7 +138,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ type }) => {
                     ? 'bg-destructive/10 text-destructive-foreground border border-destructive/20 rounded-tl-none'
                     : 'glass-panel text-foreground rounded-tl-none border-white/5'
                   }`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  <div className="text-sm leading-relaxed">
+                    {msg.content.split('\n').map((line, index) => {
+                      // Check if line contains image markdown
+                      const imageMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+                      if (imageMatch) {
+                        const altText = imageMatch[1] || 'Generated Plot';
+                        const imageUrl = imageMatch[2];
+                        const fullUrl = imageUrl.startsWith('/') ? `http://localhost:8000${imageUrl}` : imageUrl;
+                        console.log('Found image markdown:', line);
+                        console.log('Rendering image URL:', fullUrl);
+                        return (
+                          <div key={index} className="my-4">
+                            <img 
+                              src={fullUrl}
+                              alt={altText}
+                              className="max-w-full h-auto rounded-lg border border-white/10 shadow-lg"
+                              onLoad={() => console.log('Image loaded successfully:', fullUrl)}
+                              onError={(e) => {
+                                console.error('Image failed to load:', fullUrl);
+                                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
+                              }}
+                            />
+                          </div>
+                        );
+                      }
+                      // Skip empty lines and standalone "Plot" text
+                      if (!line.trim() || line.trim() === 'Plot') return null;
+                      return <div key={index} className="whitespace-pre-wrap">{line}</div>;
+                    }).filter(Boolean)}
+                  </div>
 
                   {msg.thinking && (
                     <div className="mt-4 pt-4 border-t border-white/5">

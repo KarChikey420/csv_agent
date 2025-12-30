@@ -1,6 +1,5 @@
-from langchain.agents import create_react_agent, AgentExecutor
+from langchain.agents import AgentExecutor, initialize_agent, AgentType
 from langchain.tools import Tool
-from langchain import hub
 import os
 from ..llm_loder.llm import load_llm
 from ..data.load_data import load_dataframe
@@ -26,10 +25,11 @@ def run_multi_agent(query:str, file_path:str=None):
             column = parts[0].strip()
             plot_type = parts[1].strip() if len(parts) > 1 else "hist"
             result_plot = generate_plot(df, column, plot_type)
-            if "![Plot]" in str(result_plot):
+            print(f"Generated plot: {result_plot}")
+            if result_plot and "![Plot]" in str(result_plot):
                 plots.append(result_plot)
-                return "Plot generated successfully."
-            return result_plot
+                return f"Successfully generated {plot_type} plot for {column} column."
+            return result_plot if result_plot else "Plot generation failed."
         except Exception as e:
             return f"Error generating plot: {str(e)}"
 
@@ -77,13 +77,11 @@ def run_multi_agent(query:str, file_path:str=None):
 
     ]
 
-    prompt = hub.pull("hwchase17/react")
-    
-    agent = create_react_agent(llm_instance, tools, prompt)
-    
-    agent_executor = AgentExecutor(
-        agent=agent,
+    # Create agent using initialize_agent
+    agent_executor = initialize_agent(
         tools=tools,
+        llm=llm_instance,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
         verbose=True,
         handle_parsing_errors=True
     )
@@ -92,7 +90,7 @@ def run_multi_agent(query:str, file_path:str=None):
         result = agent_executor.invoke({"input": query})
         output = result.get("output", str(result))
         
-        final_response = f"{data_snapshot}\n\n{output}"
+        final_response = output
         if plots:
             final_response += "\n\n### Generated Plots\n" + "\n".join(plots)
             
