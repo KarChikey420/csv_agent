@@ -32,14 +32,13 @@ DataFlow is a sophisticated multi-agent platform designed for automated Explorat
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+
-- PostgreSQL Database
 
 ### Installation
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd prompt_agent
+   git clone https://github.com/KarChikey420/csv_agent.git
+   cd csv_agent
    ```
 
 2. **Backend Setup**:
@@ -47,7 +46,7 @@ DataFlow is a sophisticated multi-agent platform designed for automated Explorat
    cd backend
    # Create and activate virtual environment
    python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   source venv/bin/activate
    
    # Install dependencies
    pip install -r requirements.txt
@@ -86,5 +85,4 @@ DataFlow is a sophisticated multi-agent platform designed for automated Explorat
 ```
 
 ## 📝 License
-
 © 2025 DataFlow EDA Agent. Built for Advanced Data Intelligence.
