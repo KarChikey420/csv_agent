@@ -93,7 +93,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ type }) => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] gap-6 max-w-6xl mx-auto w-full">
+    <div className="flex flex-col min-h-[calc(100vh-2rem)] gap-6 max-w-6xl mx-auto w-full">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
@@ -286,6 +286,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ type }) => {
                         </div>
                       )
                     }}
+                    urlTransform={(value) => value}
                   >
                     {result}
                   </ReactMarkdown>

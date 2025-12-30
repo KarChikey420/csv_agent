@@ -14,17 +14,15 @@ import { AgentType } from '../types';
 
 interface SidebarProps {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: AgentType) => void;
   onLogout: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) => {
   const navItems = [
-    { id: 'dashboard', icon: BarChart3, label: 'Data Overview' },
-    { id: AgentType.REACT, icon: BrainCircuit, label: 'EDA Reasoning' },
     { id: AgentType.MULTI, icon: Users, label: 'Expert Cluster' },
+    { id: AgentType.REACT, icon: BrainCircuit, label: 'EDA Reasoning' },
     { id: AgentType.MEMORY, icon: Database, label: 'Schema Store' },
-    { id: AgentType.GENERAL, icon: Terminal, label: 'Direct Console' },
   ];
 
   return (
@@ -43,10 +41,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveTab(item.id)}
+            onClick={() => setActiveTab(item.id as AgentType)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative overflow-hidden ${activeTab === item.id
-                ? 'bg-primary/10 text-primary border border-primary/20'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              ? 'bg-primary/10 text-primary border border-primary/20'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
           >
             {activeTab === item.id && (

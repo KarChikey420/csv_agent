@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
 import AgentForm from './components/AgentForm';
 import AuthForm from './components/AuthForm';
 import { AgentType } from './types';
 import { authService } from './services/apiService';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<AgentType>(AgentType.MULTI);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -54,11 +53,9 @@ const App: React.FC = () => {
 
       <main className="flex-1 ml-64 p-6 min-h-screen flex flex-col relative z-10 transition-all duration-300">
         <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col animate-fade-in">
-          {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === AgentType.REACT && <AgentForm type={AgentType.REACT} />}
           {activeTab === AgentType.MULTI && <AgentForm type={AgentType.MULTI} />}
           {activeTab === AgentType.MEMORY && <AgentForm type={AgentType.MEMORY} />}
-          {activeTab === AgentType.GENERAL && <AgentForm type={AgentType.GENERAL} />}
         </div>
       </main>
     </div>

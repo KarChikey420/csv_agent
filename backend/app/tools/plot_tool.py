@@ -26,17 +26,14 @@ def generate_plot(df, column, plot_type="hist"):
     plt.ylabel('Frequency' if plot_type == 'hist' else 'Value')
     plt.tight_layout()
     
-    # Create plots directory in backend folder
-    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    plots_dir = os.path.join(backend_dir, "temp_data", "plots")
-    os.makedirs(plots_dir, exist_ok=True)
-    
-    plot_filename = f"plot_{uuid.uuid4().hex[:8]}.png"
-    plot_path = os.path.join(plots_dir, plot_filename)
-    
-    # Save the plot
-    plt.savefig(plot_path, format="png", bbox_inches='tight', dpi=150)
+    # Save to buffer instead of file
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", bbox_inches='tight', dpi=150)
     plt.close()
+    buffer.seek(0)
     
-    print(f"Plot saved to: {plot_path}")
-    return f"![Plot](/api/plots/{plot_filename})"
+    # Encode to base64
+    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    print(f"Plot generated for {column} ({plot_type})")
+    return f"![Plot](data:image/png;base64,{image_base64})"
