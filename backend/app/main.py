@@ -144,7 +144,6 @@ def preview_data(file: UploadFile = File(...)):
         
         df = load_dataframe(file_path)
         
-        # Convert NaN to None for JSON compatibility
         df = df.where(pd.notnull(df), None)
         
         preview = {
