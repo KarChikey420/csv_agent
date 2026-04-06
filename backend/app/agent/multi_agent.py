@@ -6,9 +6,10 @@ from ..data.load_data import load_dataframe
 from ..tools.missing_tool import find_missing
 from ..tools.outlier import find_outlier
 from ..tools.correlation import get_correlation
-from ..tools.eda_tools import df_summary
-from ..tools.plot_tool import generate_plot
 from ..tools.report_tool import generate_report
+import logging
+
+logger = logging.getLogger("prepx_backend.multi_agent")
 
 def run_multi_agent(query:str, file_path:str=None):
     if file_path is None:
@@ -96,6 +97,7 @@ def run_multi_agent(query:str, file_path:str=None):
             
         return final_response
     except Exception as e:
+        logger.error(f"Error in run_multi_agent: {str(e)}")
         if "parsing" in str(e).lower():
             return str(e).split("Could not parse LLM output: `")[1].split("`")[0] if "Could not parse LLM output: `" in str(e) else str(e)
         raise e

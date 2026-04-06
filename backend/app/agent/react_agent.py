@@ -1,6 +1,9 @@
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from ..llm_loder.llm import load_llm
 from ..data.load_data import load_dataframe
+import logging
+
+logger = logging.getLogger("prepx_backend.react_agent")
 
 def run_react_agent(query:str,file_path:str=None):
     if file_path is None:
@@ -17,6 +20,7 @@ def run_react_agent(query:str,file_path:str=None):
         result = agent.invoke({"input": query})
         return result.get("output", str(result))
     except Exception as e:
+        logger.error(f"Error in run_react_agent: {str(e)}")
         error_msg = str(e)
         if "parsing" in error_msg.lower():
             if "Could not parse LLM output: `" in error_msg:

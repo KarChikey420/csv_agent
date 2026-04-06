@@ -16,6 +16,18 @@ from .data.load_data import load_dataframe
 import shutil
 import os
 import uvicorn
+import logging
+import time
+from fastapi import BackgroundTasks
+from fastapi.concurrency import run_in_threadpool
+from .config.setting import ALLOWED_ORIGINS, TEMP_DATA_DIR
+
+# Configure Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger("prepx_backend")
 
 app=FastAPI()
 
@@ -23,7 +35,7 @@ app=FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,39 +91,75 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
 
-def save_upload_file(file: UploadFile) -> str:
+async def save_upload_file(file: UploadFile) -> str:
     if not file or not file.filename:
         return None
-    upload_dir = os.path.join(os.getcwd(), "temp_data")
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file.filename)
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    
+    os.makedirs(TEMP_DATA_DIR, exist_ok=True)
+    file_path = os.path.join(TEMP_DATA_DIR, file.filename)
+    
+    def write_file():
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+    await run_in_threadpool(write_file)
     return file_path
 
-@app.post("/agent/react")
-def react_agent_endpoint(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
+async def cleanup_temp_files():
+    """Background task to delete old temp files."""
     try:
-        file_path = save_upload_file(file)
-        response = run_react_agent(query, file_path)
+        now = time.time()
+        for f in os.listdir(TEMP_DATA_DIR):
+            f_path = os.path.join(TEMP_DATA_DIR, f)
+            # Delete if older than 1 hour
+            if os.path.getmtime(f_path) < now - 3600:
+                if os.path.isfile(f_path):
+                    os.remove(f_path)
+                elif os.path.isdir(f_path) and f == "plots":
+                    # Keep plots dir but maybe clean contents? 
+                    # For now just files.
+                    pass
+        logger.info("Temporary files cleaned up.")
+    except Exception as e:
+        logger.error(f"Error during cleanup: {str(e)}")
+
+@app.post("/agent/react")
+async def react_agent_endpoint(
+    background_tasks: BackgroundTasks,
+    query: str = Form(...), 
+    file: UploadFile = File(None), 
+    db: Session = Depends(get_db), 
+    user: User = Depends(current_user)
+):
+    try:
+        file_path = await save_upload_file(file)
+        response = await run_in_threadpool(run_react_agent, query, file_path)
+        background_tasks.add_task(cleanup_temp_files)
         return {"response": response}
     except Exception as e:
-        print(f"Error in react_agent_endpoint: {str(e)}")
+        logger.error(f"Error in react_agent_endpoint: {str(e)}")
         if "quota" in str(e).lower() or "429" in str(e):
             raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
-        raise HTTPException(500, f"Agent processing failed: {str(e)}")
+        raise HTTPException(500, "Agent processing failed. Please check logs.")
 
 @app.post("/agent/multi")
-def multi_agent_endpoint(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
+async def multi_agent_endpoint(
+    background_tasks: BackgroundTasks,
+    query: str = Form(...), 
+    file: UploadFile = File(None), 
+    db: Session = Depends(get_db), 
+    user: User = Depends(current_user)
+):
     try:
-        file_path = save_upload_file(file)
-        response = run_multi_agent(query, file_path)
+        file_path = await save_upload_file(file)
+        response = await run_in_threadpool(run_multi_agent, query, file_path)
+        background_tasks.add_task(cleanup_temp_files)
         return {"response": response}
     except Exception as e:
-        print(f"Error in multi_agent_endpoint: {str(e)}")
+        logger.error(f"Error in multi_agent_endpoint: {str(e)}")
         if "quota" in str(e).lower() or "429" in str(e):
             raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
-        raise HTTPException(500, f"Agent processing failed: {str(e)}")
+        raise HTTPException(500, "Agent processing failed. Please check logs.")
 
 @app.post("/agent/memory")
 def memory_agent_endpoint(request: ChatRequest, db: Session = Depends(get_db), user: User = Depends(current_user)):
@@ -124,38 +172,41 @@ def memory_agent_endpoint(request: ChatRequest, db: Session = Depends(get_db), u
         raise HTTPException(500, f"Agent processing failed: {str(e)}")
 
 @app.post("/chat")
-def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = Depends(get_db), user: User = Depends(current_user)):
+async def chat(
+    background_tasks: BackgroundTasks,
+    query: str = Form(...), 
+    file: UploadFile = File(None), 
+    db: Session = Depends(get_db), 
+    user: User = Depends(current_user)
+):
     try:
-        file_path = save_upload_file(file)
-        response = run_react_agent(query, file_path)
+        file_path = await save_upload_file(file)
+        response = await run_in_threadpool(run_react_agent, query, file_path)
+        background_tasks.add_task(cleanup_temp_files)
         return {"response": response}
     except Exception as e:
-        print(f"Error in chat endpoint: {str(e)}")
+        logger.error(f"Error in chat endpoint: {str(e)}")
         if "quota" in str(e).lower() or "429" in str(e):
             raise HTTPException(429, "API quota exceeded. Please wait a moment and try again.")
-        raise HTTPException(500, f"Agent processing failed: {str(e)}")
+        raise HTTPException(500, "Agent processing failed. Please check logs.")
 
 
 @app.get("/api/plots/{filename}")
-def serve_plot(filename: str):
-    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    plots_dir = os.path.join(backend_dir, "app", "temp_data", "plots")
+async def serve_plot(filename: str):
+    plots_dir = os.path.join(TEMP_DATA_DIR, "plots")
     file_path = os.path.join(plots_dir, filename)
-    print(f"Looking for plot at: {file_path}")
-    print(f"File exists: {os.path.exists(file_path)}")
     if os.path.exists(file_path):
         return FileResponse(file_path, media_type="image/png")
-    raise HTTPException(404, f"Plot not found: {filename} at {file_path}")
+    raise HTTPException(404, f"Plot not found: {filename}")
 
 @app.post("/data/preview")
-def preview_data(file: UploadFile = File(...)):
+async def preview_data(file: UploadFile = File(...)):
     try:
-        file_path = save_upload_file(file)
+        file_path = await save_upload_file(file)
         if not file_path:
              raise HTTPException(400, "File upload failed")
         
-        df = load_dataframe(file_path)
-        
+        df = await run_in_threadpool(load_dataframe, file_path)
         df = df.where(pd.notnull(df), None)
         
         preview = {
@@ -166,8 +217,8 @@ def preview_data(file: UploadFile = File(...)):
         }
         return preview
     except Exception as e:
-        print(f"Error in preview endpoint: {str(e)}")
-        raise HTTPException(500, f"Preview failed: {str(e)}")
+        logger.error(f"Error in preview endpoint: {str(e)}")
+        raise HTTPException(500, "Preview failed. Please check logs.")
 
 
 
@@ -184,7 +235,10 @@ async def gemma_chat(request: Request, db: Session = Depends(get_db), user: User
         
         llm = load_llm()
         # For ChatOpenAI, we can pass messages directly
-        response = llm.invoke(payload["messages"])
+        if hasattr(llm, "ainvoke"):
+            response = await llm.ainvoke(payload["messages"])
+        else:
+            response = await run_in_threadpool(llm.invoke, payload["messages"])
         
         # Return in a format similar to OpenAI's response if possible, 
         # or just return the content.

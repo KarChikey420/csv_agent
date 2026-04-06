@@ -8,8 +8,12 @@ import os
 load_dotenv()
 
 SECRET_KEY=os.getenv("Secret_key")
-ALGORITHM=os.getenv("Algorithm")
-oath2_scheme=OAuth2PasswordBearer(tokenUrl="token")
+ALGORITHM=os.getenv("Algorithm", "HS256")
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in environment variables.")
+
+oath2_scheme=OAuth2PasswordBearer(tokenUrl="/login")
 
 def create_access_token(data:dict):
     to_encode=data.copy()
