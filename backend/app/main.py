@@ -97,6 +97,7 @@ async def save_upload_file(file: UploadFile) -> str:
     
     os.makedirs(TEMP_DATA_DIR, exist_ok=True)
     file_path = os.path.join(TEMP_DATA_DIR, file.filename)
+    await file.seek(0)
     
     def write_file():
         with open(file_path, "wb") as buffer:
