@@ -1,7 +1,23 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
-import { AgentType } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://csv-agent-72hj.onrender.com';
+const resolveApiBaseUrl = () => {
+  const configuredBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+
+  if (typeof window === 'undefined') {
+    return configuredBaseUrl || 'http://127.0.0.1:8000';
+  }
+
+  const browserHost = window.location.hostname || 'localhost';
+
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/$/, '');
+  }
+
+  return `${window.location.protocol}//${browserHost}:8000`;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,6 +31,48 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export const getApiErrorMessage = (error: unknown, fallback = 'Request failed') => {
+  if (axios.isAxiosError(error)) {
+    const detail = error.response?.data?.detail;
+
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail;
+    }
+
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail
+        .map((item) => {
+          if (typeof item === 'string') {
+            return item;
+          }
+          if (item && typeof item.msg === 'string') {
+            return item.msg;
+          }
+          return JSON.stringify(item);
+        })
+        .join(' ');
+    }
+
+    if (typeof error.response?.data === 'string' && error.response.data.trim()) {
+      return error.response.data;
+    }
+
+    if (!error.response) {
+      return `Cannot connect to the backend server at ${API_BASE_URL}.`;
+    }
+
+    if (error.message) {
+      return error.message;
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+};
 
 export interface AuthResponse {
   access_token: string;
@@ -30,9 +88,11 @@ export interface DataPreviewResponse {
   columns: string[];
   head: any[];
   shape: number[];
+  stats?: any;
 }
 
 export const authService = {
+  // ... (keep existing)
   signup: async (name: string, email: string, password: string) => {
     const response = await api.post('/signup', { name, email, password });
     return response.data;
@@ -50,46 +110,66 @@ export const authService = {
 
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
+  },
+
+  getProfile: async () => {
+    const response = await api.get('/api/me');
+    return response.data;
+  },
+
+  checkHealth: async () => {
+    try {
+      // Hit the dedicated health endpoint
+      await api.get('/api/health');
+      return true;
+    } catch (err: any) {
+      // If we get a response (even a 404), the server is technically reachable
+      if (err.response) return true;
+      return false;
+    }
   }
 };
 
 export const agentService = {
-  chat: async (query: string, file?: File): Promise<string> => {
+  chat: async (query: string, file?: File, datasetId?: number): Promise<string> => {
     const formData = new FormData();
     formData.append('query', query);
     if (file) {
       formData.append('file', file);
     }
+    if (datasetId) {
+      formData.append('dataset_id', datasetId.toString());
+    }
 
-    const response = await api.post<ApiResponse>('/chat', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post<ApiResponse>('/chat', formData);
     return response.data.response;
   },
 
-  reactAgent: async (query: string, file?: File): Promise<string> => {
+  reactAgent: async (query: string, file?: File, datasetId?: number): Promise<string> => {
     const formData = new FormData();
     formData.append('query', query);
     if (file) {
       formData.append('file', file);
     }
+    if (datasetId) {
+      formData.append('dataset_id', datasetId.toString());
+    }
 
-    const response = await api.post<ApiResponse>('/agent/react', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post<ApiResponse>('/agent/react', formData);
     return response.data.response;
   },
 
-  multiAgent: async (query: string, file?: File): Promise<string> => {
+  multiAgent: async (query: string, file?: File, datasetId?: number): Promise<string> => {
     const formData = new FormData();
     formData.append('query', query);
     if (file) {
       formData.append('file', file);
     }
+    if (datasetId) {
+      formData.append('dataset_id', datasetId.toString());
+    }
 
-    const response = await api.post<ApiResponse>('/agent/multi', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post<ApiResponse>('/agent/multi', formData);
     return response.data.response;
   },
 
@@ -101,9 +181,14 @@ export const agentService = {
   previewData: async (file: File): Promise<DataPreviewResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post<DataPreviewResponse>('/data/preview', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post<DataPreviewResponse>('/data/preview', formData);
+    return response.data;
+  },
+
+  uploadDataset: async (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/dataset/upload', formData);
     return response.data;
   }
 };

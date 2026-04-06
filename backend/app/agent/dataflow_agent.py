@@ -1,4 +1,3 @@
-import logging
 from typing import Annotated, Sequence, TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, END
@@ -8,27 +7,67 @@ from langchain_core.tools import tool, StructuredTool
 from ..llm_loder.llm import load_llm
 from ..data.load_data import load_dataframe
 from ..tools.eda_tools import get_summary_stats, detect_outliers, get_correlation_matrix, generate_eda_plot
-from langchain_core.tools import tool, StructuredTool
+import logging
+import pandas as pd
+import os
 
-logger = logging.getLogger("dataflow.react_agent")
+logger = logging.getLogger("dataflow.agent")
 
 class AgentState(TypedDict):
     """The state of the graph."""
     messages: Annotated[Sequence[BaseMessage], lambda a, b: a + b]
 
-def run_react_agent(query: str, file_path: str = None):
-    """Run a React agent using LangGraph."""
-    if file_path is None:
-        return "Please upload a CSV file to perform data analysis."
+@tool
+def get_stats(dataset_path: str):
+    """Get basic statistics and summary for the uploaded dataset."""
+    df = load_dataframe(dataset_path)
+    return get_summary_stats(df)
+
+@tool
+def find_outliers(dataset_path: str, columns: list = None):
+    """Detect outliers in the specified columns (or all numeric columns if None)."""
+    df = load_dataframe(dataset_path)
+    return detect_outliers(df, columns)
+
+@tool
+def get_correlations(dataset_path: str):
+    """Compute the correlation matrix for the dataset."""
+    df = load_dataframe(dataset_path)
+    return get_correlation_matrix(df)
+
+@tool
+def create_plot(dataset_path: str, plot_type: str, x: str, y: str = None, hue: str = None, title: str = None):
+    """
+    Generate a visualization for the dataset and return it as a Base64 string.
+    Supported plot_type: 'histogram', 'box', 'scatter', 'bar', 'heatmap'.
+    Returns a string starting with 'data:image/png;base64,...'
+    """
+    df = load_dataframe(dataset_path)
+    return generate_eda_plot(df, plot_type, x, y, hue, title)
+
+def run_dataflow_agent(query: str, file_path: str = None):
+    """Run the DataFlow EDA agent."""
+    if not file_path or not os.path.exists(file_path):
+        return "Please upload a CSV file to begin analysis."
     
     try:
-        # Load data
-        df = load_dataframe(file_path)
-        
-        # Initialize LLM
         llm = load_llm()
         
-        # Create tools
+        # Load the dataframe once for Python REPL tool
+        df = load_dataframe(file_path)
+        
+        # Define tools
+        # We wrap the file_path in a closure or pass it as a fixed argument
+        # For simplicity, we ensure tools know about the file_path
+        
+        def _get_stats(): return get_stats.invoke({"dataset_path": file_path})
+        def _find_outliers(cols=None): return find_outliers.invoke({"dataset_path": file_path, "columns": cols})
+        def _create_plot(pt, x, y=None, h=None, t=None): return create_plot.invoke({"dataset_path": file_path, "plot_type": pt, "x": x, "y": y, "hue": h, "title": t})
+        
+        # Creating a list of tools for the agent
+        # We use a custom wrapper or provide the tools with the file_path pre-filled where possible
+        # Or better, just give the agent the Python REPL and the specialized tools
+        
         tools = [
             PythonAstREPLTool(locals={"df": df}),
             StructuredTool.from_function(
@@ -94,8 +133,5 @@ def run_react_agent(query: str, file_path: str = None):
         return str(result)
         
     except Exception as e:
-        logger.error(f"Error in run_react_agent: {str(e)}")
-        error_msg = str(e)
-        if "parsing" in error_msg.lower():
-             return "I encountered an error parsing the data results. Please try a more specific question."
+        logger.error(f"Error in DataFlow agent: {str(e)}")
         raise e

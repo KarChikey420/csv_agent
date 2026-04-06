@@ -1,271 +1,192 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, Loader2, Database, User, Bot, LineChart } from 'lucide-react';
-import { Message, AgentType, FileInfo } from '../types';
-import { getAgentResponse } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
+import { Send, Loader2, User, Bot, Paperclip, X, Image as ImageIcon } from 'lucide-react';
+import { agentService, getApiErrorMessage } from '../services/apiService';
 
-interface ChatInterfaceProps {
-  type: AgentType;
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  isImage?: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ type }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+interface ChatInterfaceProps {
+  selectedFile: File | null;
+  datasetId: number | null;
+  onFileRemove: () => void;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, onFileRemove }) => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: 'Hello! I am DataFlow, your AI data analyst. Upload a CSV to begin our analysis.',
+      timestamp: new Date()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, [messages, loading]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() && attachedFiles.length === 0) return;
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!input.trim() && !loading) return;
 
-    const userMsg: Message = {
-      id: Date.now().toString(),
+    const userMessage: Message = {
       role: 'user',
-      content: inputValue,
-      timestamp: Date.now(),
-      files: attachedFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      content: input,
+      timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMsg]);
-    setInputValue('');
-    setAttachedFiles([]);
-    setIsLoading(true);
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
 
     try {
-      const history = messages.map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.content }]
-      }));
-
-      const file = attachedFiles.length > 0 ? attachedFiles[0] : undefined;
-      const response = await getAgentResponse(inputValue || "Run exploratory analysis", type, history, file);
-
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
+      // If we have a datasetId, we don't need to send the raw file again.
+      // This prevents net::ERR_UPLOAD_FILE_CHANGED.
+      const response = await agentService.chat(
+        input, 
+        datasetId ? undefined : (selectedFile || undefined),
+        datasetId || undefined
+      );
+      const assistantMessage: Message = {
         role: 'assistant',
-        content: response.text,
-        thinking: response.thinking,
-        timestamp: Date.now()
+        content: response,
+        timestamp: new Date()
       };
-
-      setMessages(prev => [...prev, assistantMsg]);
-    } catch (error) {
-      console.error(error);
-      const errMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'system',
-        content: "Pipeline error: Analysis cluster failed to process the request. Verify your dataset format.",
-        timestamp: Date.now()
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (err) {
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: `Error: ${getApiErrorMessage(err)}`,
+        timestamp: new Date()
       };
-      setMessages(prev => [...prev, errMsg]);
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full glass-panel shadow-2xl rounded-2xl overflow-hidden relative">
-      {/* Background Grid */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
-
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-primary/5 backdrop-blur-md z-10">
+    <div className="flex flex-col h-full glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+      {/* Chat Header */}
+      <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/20 rounded-lg border border-primary/20">
-            <LineChart className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
+            <Bot className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground uppercase tracking-tight">{type} EDA Agent</h2>
-            <p className="text-xs text-muted-foreground font-mono">NODE_ENDPOINT: /agent/{type}</p>
+            <h3 className="font-bold text-foreground">DataFlow AI</h3>
+            <p className="text-[10px] text-primary font-mono uppercase tracking-widest">Active Analysis Session</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-          <span className="text-xs font-bold text-primary uppercase tracking-tighter shadow-glow">Cluster Ready</span>
         </div>
       </div>
 
-      {/* Messages */}
-      <div
+      {/* Messages Area */}
+      <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-8 z-10"
+        className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
       >
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-60">
-            <div className="w-24 h-24 bg-card border-2 border-dashed border-border rounded-3xl flex items-center justify-center relative group">
-              <div className="absolute inset-0 bg-primary/20 blur-xl group-hover:bg-primary/30 transition-all rounded-3xl"></div>
-              <Database className="w-10 h-10 text-primary relative z-10" />
+        {messages.map((msg, idx) => (
+          <div 
+            key={idx} 
+            className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
+          >
+            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border ${
+              msg.role === 'user' 
+                ? 'bg-secondary border-white/10' 
+                : 'bg-primary/10 border-primary/20'
+            }`}>
+              {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5 text-primary" />}
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">Awaiting Dataset</h3>
-              <p className="max-w-xs text-muted-foreground text-sm mt-2">
-                Upload a CSV, Excel or JSON file to initialize the exploratory analysis pipeline.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-            <div className={`flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' :
-                msg.role === 'system' ? 'bg-destructive/20 text-destructive' : 'bg-card border border-border text-primary'
-                }`}>
-                {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-6 h-6" />}
+            
+            <div className={`max-w-[80%] px-5 py-4 rounded-2xl text-sm leading-relaxed ${
+              msg.role === 'user' 
+                ? 'bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/20' 
+                : 'glass-card border border-white/5 text-foreground/90'
+            }`}>
+              <div className="prose prose-invert prose-sm max-w-none">
+                <ReactMarkdown
+                   components={{
+                    img: ({ node, ...props }) => (
+                      <div className="my-4 rounded-xl overflow-hidden border border-white/10 shadow-xl group relative">
+                         <img {...props} className="w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]" />
+                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="px-2 py-1 bg-black/60 backdrop-blur-md rounded text-[10px] uppercase font-bold tracking-tight">AI Generated Visualize</span>
+                         </div>
+                      </div>
+                    )
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
               </div>
-
-              <div className="flex flex-col space-y-2 min-w-0">
-                <div className={`px-6 py-4 rounded-3xl shadow-lg backdrop-blur-sm ${msg.role === 'user'
-                  ? 'bg-primary/10 text-foreground border border-primary/20 rounded-tr-none'
-                  : msg.role === 'system'
-                    ? 'bg-destructive/10 text-destructive-foreground border border-destructive/20 rounded-tl-none'
-                    : 'glass-panel text-foreground rounded-tl-none border-white/5'
-                  }`}>
-                  <div className="text-sm leading-relaxed">
-                    {msg.content.split('\n').map((line, index) => {
-                      // Check if line contains image markdown
-                      const imageMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
-                      if (imageMatch) {
-                        const altText = imageMatch[1] || 'Generated Plot';
-                        const imageUrl = imageMatch[2];
-                        const fullUrl = imageUrl.startsWith('/') ? `http://localhost:8000${imageUrl}` : imageUrl;
-                        console.log('Found image markdown:', line);
-                        console.log('Rendering image URL:', fullUrl);
-                        return (
-                          <div key={index} className="my-4">
-                            <img 
-                              src={fullUrl}
-                              alt={altText}
-                              className="max-w-full h-auto rounded-lg border border-white/10 shadow-lg"
-                              onLoad={() => console.log('Image loaded successfully:', fullUrl)}
-                              onError={(e) => {
-                                console.error('Image failed to load:', fullUrl);
-                                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
-                              }}
-                            />
-                          </div>
-                        );
-                      }
-                      // Skip empty lines and standalone "Plot" text
-                      if (!line.trim() || line.trim() === 'Plot') return null;
-                      return <div key={index} className="whitespace-pre-wrap">{line}</div>;
-                    }).filter(Boolean)}
-                  </div>
-
-                  {msg.thinking && (
-                    <div className="mt-4 pt-4 border-t border-white/5">
-                      <details className="group">
-                        <summary className="text-xs text-muted-foreground cursor-pointer flex items-center gap-2 hover:text-primary transition-colors">
-                          <span className="uppercase font-bold tracking-wider">Analysis Trace</span>
-                          <div className="h-px bg-border flex-1"></div>
-                        </summary>
-                        <div className="mt-2 text-xs font-mono text-muted-foreground bg-black/20 p-3 rounded-lg border border-white/5">
-                          {msg.thinking}
-                        </div>
-                      </details>
-                    </div>
-                  )}
-
-                  {msg.files && msg.files.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {msg.files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-background/50 rounded-lg text-xs font-mono border border-white/10 text-primary">
-                          <Database className="w-3 h-3" />
-                          <span>{f.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className={`text-[10px] mt-2 opacity-50 ${msg.role === 'user' ? 'text-right' : ''}`}>
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </div>
         ))}
-        {isLoading && (
-          <div className="flex justify-start animate-fade-in">
-            <div className="flex gap-4 items-center">
-              <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shadow-lg">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="h-2 w-24 bg-primary/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary animate-[shimmer_1s_infinite] w-full origin-left-right"></div>
-                </div>
-                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">Processing Data Stream</span>
-              </div>
+        {loading && (
+          <div className="flex gap-4 animate-pulse">
+            <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-primary/40" />
+            </div>
+            <div className="glass-card border border-white/5 px-6 py-4 rounded-2xl flex items-center gap-3">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Analysing Data...</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-border bg-black/20 backdrop-blur-md z-10">
-        <div className="flex items-end gap-3">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-3.5 text-muted-foreground hover:text-primary transition-colors bg-card hover:bg-card/80 rounded-xl border border-border shadow-sm group"
-          >
-            <Paperclip className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            multiple
-          />
+      <div className="p-6 bg-white/5 border-t border-white/5">
+        <form onSubmit={handleSend} className="relative flex items-center gap-3">
+          {selectedFile && (
+            <div className="absolute -top-12 left-0 flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full animate-fade-in">
+              <Paperclip className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-bold text-primary truncate max-w-[150px] uppercase tracking-tight">{selectedFile.name}</span>
+              <button 
+                type="button" 
+                onClick={onFileRemove}
+                className="hover:text-destructive transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          
           <div className="flex-1 relative group">
-            <textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder={`Communicate with ${type} agent cluster...`}
-              className="w-full bg-[#1e293b] text-white placeholder-gray-400 rounded-xl py-3.5 px-5 pr-14 border border-gray-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none resize-none min-h-[56px] max-h-32 transition-all shadow-inner"
-              rows={1}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isLoading || (!inputValue.trim() && attachedFiles.length === 0)}
-              className="absolute right-2 bottom-2 p-2.5 text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:bg-muted disabled:text-muted-foreground rounded-lg transition-all shadow-lg hover:shadow-primary/20 hover:scale-105 active:scale-95"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        {attachedFiles.length > 0 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {attachedFiles.map((file, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-lg text-xs text-primary group">
-                <span className="max-w-[150px] truncate">{file.name}</span>
-                <button onClick={() => removeFile(i)} className="hover:text-destructive transition-colors">
-                  <X className="w-3 h-3" />
-                </button>
+             <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={selectedFile ? "Ask DataFlow about this dataset..." : "Upload a CSV to start..."}
+                disabled={loading}
+                className="w-full bg-black/40 border border-white/10 rounded-2xl pl-5 pr-12 py-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                 <button 
+                    type="submit"
+                    disabled={(!input.trim() && !loading) || loading}
+                    className="p-2 bg-primary rounded-xl text-primary-foreground shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all"
+                 >
+                   <Send className="w-5 h-5" />
+                 </button>
               </div>
-            ))}
           </div>
-        )}
+        </form>
+        <p className="text-[10px] text-center mt-4 text-muted-foreground uppercase tracking-[0.2em] font-medium opacity-50">
+          Powered by DataFlow Reasoning Engine
+        </p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
-import { authService } from '../services/apiService';
+import { authService, getApiErrorMessage } from '../services/apiService';
 
 interface AuthFormProps {
   onAuthSuccess: () => void;
@@ -15,22 +15,36 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isBackendOff, setIsBackendOff] = useState(false);
+
+  React.useEffect(() => {
+    const ping = async () => {
+      const ok = await authService.checkHealth();
+      setIsBackendOff(!ok);
+    };
+    ping();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    console.log('Attempting authentication...', isLogin ? 'Login' : 'Signup', formData.email);
     try {
       if (isLogin) {
         await authService.login(formData.email, formData.password);
+        console.log('Login successful');
       } else {
         await authService.signup(formData.name, formData.email, formData.password);
+        console.log('Signup successful');
         await authService.login(formData.email, formData.password);
       }
+      console.log('Triggering onAuthSuccess callback');
       onAuthSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Authentication failed');
+    } catch (err) {
+      console.error('Authentication Error Details:', err);
+      setError(getApiErrorMessage(err, 'Authentication failed'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +77,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-[#0f172a] text-white pl-10 pr-4 py-3 rounded-xl border border-gray-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-all"
+                  className="w-full bg-background/50 text-foreground pl-10 pr-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
                   placeholder="Enter your name"
                   required={!isLogin}
                 />
@@ -100,6 +114,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
               />
             </div>
           </div>
+
+          {isBackendOff && (
+            <div className="text-amber-500 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 animate-pulse">
+              ⚠️ Backend appears to be offline. Please ensure the server is running on port 8000.
+            </div>
+          )}
 
           {error && (
             <div className="text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-lg p-3">

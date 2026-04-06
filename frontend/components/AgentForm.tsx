@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Upload, FileText, Loader2, Sparkles, Terminal, AlertCircle, Play } from 'lucide-react';
 import { AgentType } from '../types';
-import { agentService, DataPreviewResponse } from '../services/apiService';
+import { agentService, DataPreviewResponse, getApiErrorMessage } from '../services/apiService';
 import { Database } from 'lucide-react';
 
 interface AgentFormProps {
@@ -45,9 +45,9 @@ const AgentForm: React.FC<AgentFormProps> = ({ type }) => {
           response = await agentService.chat(query, file || undefined);
       }
       setResult(response);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'An error occurred while processing your request.');
+      setError(getApiErrorMessage(err, 'An error occurred while processing your request.'));
     } finally {
       setLoading(false);
     }

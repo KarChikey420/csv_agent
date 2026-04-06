@@ -9,7 +9,28 @@ GEMMA_BASE_URL = os.getenv("GEMMA_BASE_URL", "https://integrate.api.nvidia.com/v
 EMBED_MODEL = "models/text-embedding-004"
 
 # Security & CORS
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173").split(",")
+DEFAULT_ORIGINS = ",".join([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+])
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", DEFAULT_ORIGINS).split(",")
+    if origin.strip()
+]
+DEV_CORS_ORIGIN_REGEX = os.getenv(
+    "DEV_CORS_ORIGIN_REGEX",
+    r"^https?://("
+    r"localhost"
+    r"|127\.0\.0\.1"
+    r"|0\.0\.0\.0"
+    r"|10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+    r"|192\.168\.\d{1,3}\.\d{1,3}"
+    r"|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
+    r")(:\d+)?$",
+)
 
 # File Storage
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -21,10 +21,16 @@ def create_access_token(data:dict):
     to_encode.update({"exp":expire})
     return jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
 
-def current_user(token:str=Depends(oath2_scheme)):
+from .database import User, get_db
+from sqlalchemy.orm import Session
+
+def current_user(token:str=Depends(oath2_scheme), db: Session = Depends(get_db)):
     try:
         payload=jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-        return payload["sub"]
+        email = payload["sub"]
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+             raise HTTPException(404, "User not found")
+        return user
     except JWTError:
         raise HTTPException(401,"Invalid Token")
-    
