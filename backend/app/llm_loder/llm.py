@@ -10,6 +10,6 @@ def load_llm():
         api_key=GEMMA_API_KEY,
         base_url=GEMMA_BASE_URL,
         temperature=0.7,
-        max_tokens=800,
+        max_tokens=2048,
     )
 

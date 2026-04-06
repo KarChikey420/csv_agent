@@ -91,9 +91,10 @@ def run_dataflow_agent(query: str, file_path: str = None):
             "You are DataFlow, an AI-powered Exploratory Data Analysis (EDA) assistant. "
             "Your goal is to help users uncover insights, detect anomalies, and generate visualizations. "
             "You have access to a pandas DataFrame named 'df'. "
-            "When asked for a visualization, use the 'generate_plot' tool and return the Base64 string result. "
-            "ALWAYS embed the Base64 image in your response using markdown syntax: ![plot](base64_string). "
-            "Precede every plot with a brief description of what it shows. "
+            "When asked for a visualization, use the 'generate_plot' tool. "
+            "You DO NOT need to copy-paste the long Base64 string into your response. "
+            "Simply state 'The plot above shows...' or similar. The system will automatically attach the image. "
+            "Precede every analysis with a brief description. "
             "End complex analyses with a 'Key Findings' summary block."
         )
         
@@ -128,7 +129,23 @@ def run_dataflow_agent(query: str, file_path: str = None):
         result = agent.invoke({"messages": [HumanMessage(content=query)]})
         
         if "messages" in result:
-            return result["messages"][-1].content
+            # AUTO-EXTRACTION: Identify all Base64 plots from ToolMessages
+            # This ensures diagrams render even if the LLM doesn't include them in the text
+            final_answer = result["messages"][-1].content
+            plots = []
+            
+            for msg in result["messages"]:
+                # Check for Base64 image pattern in any message content
+                if hasattr(msg, 'content') and isinstance(msg.content, str) and msg.content.startswith("data:image/png;base64,"):
+                    plots.append(msg.content)
+            
+            if plots:
+                # Format into markdown and prepend/append to the main response
+                # We prepend so it appears at the top (before the 'Key Findings')
+                plot_md = "\n".join([f"![plot]({p})\n" for p in plots])
+                return f"### Analysis Visualization\n{plot_md}\n---\n{final_answer}"
+            
+            return final_answer
         
         return str(result)
         
