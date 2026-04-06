@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException, Depends, UploadFile, File, Form
+import requests
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -137,7 +138,6 @@ def chat(query: str = Form(...), file: UploadFile = File(None), db: Session = De
 
 @app.get("/api/plots/{filename}")
 def serve_plot(filename: str):
-    # Use the same path structure as plot_tool.py
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     plots_dir = os.path.join(backend_dir, "app", "temp_data", "plots")
     file_path = os.path.join(plots_dir, filename)
@@ -170,4 +170,24 @@ def preview_data(file: UploadFile = File(...)):
         raise HTTPException(500, f"Preview failed: {str(e)}")
 
 
-    
+
+@app.post("/gemma/chat")
+async def gemma_chat(request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Proxy request to Google Gemma-4 model using the project's LLM loader.
+    Expects JSON body with 'messages' and optional 'max_tokens'.
+    """
+    try:
+        from .llm_loder.llm import load_llm
+        payload = await request.json()
+        if "messages" not in payload:
+            raise HTTPException(400, "'messages' field is required")
+        
+        llm = load_llm()
+        # For ChatOpenAI, we can pass messages directly
+        response = llm.invoke(payload["messages"])
+        
+        # Return in a format similar to OpenAI's response if possible, 
+        # or just return the content.
+        return {"choices": [{"message": {"content": response.content, "role": "assistant"}}]}
+    except Exception as e:
+        raise HTTPException(500, f"Gemma endpoint failed: {str(e)}")
