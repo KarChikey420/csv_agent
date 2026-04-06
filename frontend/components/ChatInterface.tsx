@@ -114,6 +114,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
             }`}>
               <div className="prose prose-invert prose-sm max-w-none">
                 <ReactMarkdown
+                   urlTransform={(uri) => 
+                     uri.startsWith('data:image/') ? uri : uri
+                   }
                    components={{
                     img: ({ node, ...props }) => (
                       <div className="my-4 rounded-xl overflow-hidden border border-white/10 shadow-xl group relative">

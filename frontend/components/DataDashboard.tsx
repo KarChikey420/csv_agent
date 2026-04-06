@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Database, Bot, BarChart3, Eraser, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Upload, Database, Bot, BarChart3, Eraser, Loader2, Sparkles, AlertCircle, Brain } from 'lucide-react';
 import { agentService, DataPreviewResponse, getApiErrorMessage } from '../services/apiService';
 import DataPreview from './DataPreview';
 import ChatInterface from './ChatInterface';
+import AdvancedIntelligence from './AdvancedIntelligence';
 
 const DataDashboard: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<DataPreviewResponse | null>(null);
   const [datasetId, setDatasetId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'workshop' | 'intelligence'>('workshop');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,35 +104,66 @@ const DataDashboard: React.FC = () => {
         </div>
       ) : (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-0">
-           {/* Data Preview Section (Left) */}
-           <div className="lg:col-span-3 h-full flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-4 px-2">
-                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
-                       <BarChart3 className="w-5 h-5 text-accent" />
-                    </div>
-                    <h2 className="text-xl font-bold">Analysis Workspace</h2>
-                 </div>
-                 <button 
-                    onClick={handleReset}
-                    className="flex items-center gap-2 px-3 py-1.5 glass-panel rounded-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors group"
-                 >
-                    <Eraser className="w-3 h-3 group-hover:animate-bounce" /> New Session
-                 </button>
-              </div>
-              <DataPreview data={preview} />
-           </div>
+            {/* Analysis Area (Left/Main) */}
+            <div className="lg:col-span-3 h-full flex flex-col min-h-0">
+               {/* Premium Tab Switcher */}
+               <div className="flex items-center justify-between mb-6 px-2">
+                  <div className="flex items-center gap-1 p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
+                     <button 
+                        onClick={() => setActiveTab('workshop')}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                           activeTab === 'workshop' 
+                           ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                           : 'hover:bg-white/5 text-muted-foreground'
+                        }`}
+                     >
+                        <Database className="w-4 h-4" />
+                        Data Workshop
+                     </button>
+                     <button 
+                        onClick={() => setActiveTab('intelligence')}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                           activeTab === 'intelligence' 
+                           ? 'bg-accent text-accent-foreground shadow-lg shadow-accent/20' 
+                           : 'hover:bg-white/5 text-muted-foreground'
+                        }`}
+                     >
+                        <Brain className="w-4 h-4" />
+                        AI Intelligence
+                     </button>
+                  </div>
+                  
+                  <button 
+                     onClick={handleReset}
+                     className="flex items-center gap-2 px-3 py-1.5 glass-panel rounded-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors group"
+                  >
+                     <Eraser className="w-3 h-3 group-hover:animate-bounce" /> New Session
+                  </button>
+               </div>
 
-           {/* Chat Section (Right) */}
-           <div className="lg:col-span-2 h-full flex flex-col min-h-0">
-              <div className="flex items-center gap-3 mb-4 px-2">
-                 <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                 </div>
-                 <h2 className="text-xl font-bold">Query Engine</h2>
-              </div>
-              <ChatInterface selectedFile={file} datasetId={datasetId} onFileRemove={handleReset} />
-           </div>
+               {/* Tab Content */}
+               <div className="flex-1 min-h-0 animate-fade-in" key={activeTab}>
+                  {activeTab === 'workshop' ? (
+                     <DataPreview data={preview} />
+                  ) : (
+                     <div className="h-full">
+                        <AdvancedIntelligence isMainStage={true} />
+                     </div>
+                  )}
+               </div>
+            </div>
+
+            <div className="lg:col-span-2 h-full flex flex-col min-h-0">
+               <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center gap-3 mb-4 px-2">
+                     <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                     </div>
+                     <h2 className="text-xl font-bold">Query Engine</h2>
+                  </div>
+                  <ChatInterface selectedFile={file} datasetId={datasetId} onFileRemove={handleReset} />
+               </div>
+            </div>
         </div>
       )}
     </div>

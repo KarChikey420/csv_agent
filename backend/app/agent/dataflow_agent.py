@@ -6,7 +6,10 @@ from langchain_experimental.tools import PythonAstREPLTool
 from langchain_core.tools import tool, StructuredTool
 from ..llm_loder.llm import load_llm
 from ..data.load_data import load_dataframe
-from ..tools.eda_tools import get_summary_stats, detect_outliers, get_correlation_matrix, generate_eda_plot
+from ..tools.eda_tools import (
+    get_summary_stats, detect_outliers, get_correlation_matrix, generate_eda_plot,
+    get_advanced_correlations, get_time_series_projection, get_predictive_insights
+)
 import logging
 import pandas as pd
 import os
@@ -84,17 +87,33 @@ def run_dataflow_agent(query: str, file_path: str = None):
                 func=lambda plot_type, x, y=None, hue=None, title=None: generate_eda_plot(df, plot_type, x, y, hue, title), 
                 name="generate_plot", 
                 description="Generate a plot (histogram, box, scatter, bar, heatmap) from 'df'. Returns Base64 string."
+            ),
+            StructuredTool.from_function(
+                func=lambda: get_advanced_correlations(df),
+                name="get_advanced_correlations",
+                description="Compute multi-factor clustered correlations. Returns a Base64 heatmap image."
+            ),
+            StructuredTool.from_function(
+                func=lambda target_col, periods=10: get_time_series_projection(df, target_col, periods),
+                name="get_time_series_projection",
+                description="Perform trend forecasting on a column. Projects future values based on historical trends."
+            ),
+            StructuredTool.from_function(
+                func=lambda target, feature: get_predictive_insights(df, target, feature),
+                name="get_predictive_insights",
+                description="Analyze the predictive relationship between two variables. Returns R-squared and impact description."
             )
         ]
         
         system_msg = (
-            "You are DataFlow, an AI-powered Exploratory Data Analysis (EDA) assistant. "
-            "Your goal is to help users uncover insights, detect anomalies, and generate visualizations. "
+            "You are DataFlow, a High-Performance AI Exploratory Data Analysis (EDA) assistant. "
+            "Your goal is to help users uncover deep insights, project trends, and generate advanced visualizations. "
             "You have access to a pandas DataFrame named 'df'. "
-            "When asked for a visualization, use the 'generate_plot' tool. "
+            "You have Advanced Intelligence tools for complex correlations, time-series projections, and predictive modeling. "
+            "When asked for a visualization or projection, use the appropriate tools. "
             "You DO NOT need to copy-paste the long Base64 string into your response. "
             "Simply state 'The plot above shows...' or similar. The system will automatically attach the image. "
-            "Precede every analysis with a brief description. "
+            "Always explain the 'Statistical Significance' of your findings. "
             "End complex analyses with a 'Key Findings' summary block."
         )
         
@@ -142,8 +161,8 @@ def run_dataflow_agent(query: str, file_path: str = None):
             if plots:
                 # Format into markdown and prepend/append to the main response
                 # We prepend so it appears at the top (before the 'Key Findings')
-                plot_md = "\n".join([f"![plot]({p})\n" for p in plots])
-                return f"### Analysis Visualization\n{plot_md}\n---\n{final_answer}"
+                plot_md = "\n".join([f"![plot]({p})" for p in plots])
+                return f"### Analysis Visualization\n{plot_md}\n\n---\n\n{final_answer}"
             
             return final_answer
         

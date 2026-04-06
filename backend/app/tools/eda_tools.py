@@ -107,7 +107,7 @@ def generate_eda_plot(df: pd.DataFrame, plot_type: str, x: str, y: Optional[str]
             plt.title(title)
         
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=80)
         plt.close('all')
         buf.seek(0)
         img_str = base64.b64encode(buf.read()).decode('utf-8')
@@ -115,3 +115,92 @@ def generate_eda_plot(df: pd.DataFrame, plot_type: str, x: str, y: Optional[str]
     except Exception as e:
         plt.close('all')
         return f"Error generating plot: {str(e)}"
+
+def get_advanced_correlations(df: pd.DataFrame) -> str:
+    """Generate a clustered heatmap for complex correlation patterns."""
+    plt.close('all')
+    numeric_df = df.select_dtypes(include=[np.number])
+    if numeric_df.empty:
+        return "Error: No numeric data available for correlation analysis."
+    
+    # Pre-calculated correlation to reduce plot overhead
+    corr = numeric_df.corr()
+    
+    plt.figure(figsize=(12, 10))
+    sns.clustermap(corr, annot=True, cmap='vlag', center=0, fmt=".2f", linewidths=.75)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=80)
+    plt.close('all')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    return f"data:image/png;base64,{img_str}"
+
+def get_time_series_projection(df: pd.DataFrame, target_col: str, periods: int = 10) -> Dict[str, Any]:
+    """Perform a simple trend projection using linear regression on row index or date."""
+    if target_col not in df.columns:
+        return {"error": f"Column '{target_col}' not found."}
+    
+    data = df[target_col].dropna()
+    if len(data) < 2:
+        return {"error": "Not enough data points for projection."}
+    
+    # Use index as time proxy
+    x = np.arange(len(data))
+    y = data.values
+    
+    # Linear Fit: y = mx + c
+    slope, intercept = np.polyfit(x, y, 1)
+    
+    # Project future steps
+    future_x = np.arange(len(data), len(data) + periods)
+    future_y = slope * future_x + intercept
+    
+    # Prepare plot
+    plt.close('all')
+    plt.figure(figsize=(10, 5))
+    plt.plot(x, y, label='Historical', color='blue', alpha=0.6)
+    plt.plot(future_x, future_y, label='Projected Trend', color='red', linestyle='--')
+    plt.fill_between(future_x, future_y * 0.9, future_y * 1.1, color='red', alpha=0.1, label='Confidence Interval (est.)')
+    plt.title(f"Trend Projection for {target_col}")
+    plt.legend()
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=80)
+    plt.close('all')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    
+    return {
+        "slope": float(slope),
+        "projection_plot": f"data:image/png;base64,{img_str}",
+        "final_predicted_value": float(future_y[-1])
+    }
+
+def get_predictive_insights(df: pd.DataFrame, target: str, feature: str) -> Dict[str, Any]:
+    """Analyze the predictive relationship between two variables."""
+    if target not in df.columns or feature not in df.columns:
+         return {"error": "Target or Feature column not found."}
+    
+    temp_df = df[[target, feature]].dropna()
+    if len(temp_df) < 5:
+        return {"error": "Insufficient data for predictive modeling."}
+    
+    x = temp_df[feature].values
+    y = temp_df[target].values
+    
+    # Regression
+    slope, intercept = np.polyfit(x, y, 1)
+    
+    # Correlation Coefficient (Pearson)
+    r = np.corrcoef(x, y)[0, 1]
+    r_squared = r**2
+    
+    insight = "strong" if r_squared > 0.7 else "moderate" if r_squared > 0.4 else "weak"
+    
+    return {
+        "r_squared": float(r_squared),
+        "relationship_strength": insight,
+        "impact_factor": float(slope),
+        "description": f"For every unit increase in {feature}, {target} usually changes by {slope:.2f} units."
+    }

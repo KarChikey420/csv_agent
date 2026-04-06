@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, LogOut, User, Sparkles, Activity, ShieldCheck, Box } from 'lucide-react';
+import { Database, LogOut, User, Sparkles, Box } from 'lucide-react';
 import DataDashboard from './components/DataDashboard';
 import AuthForm from './components/AuthForm';
 import { authService } from './services/apiService';
@@ -8,7 +8,6 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{name: string, email: string} | null>(null);
-  const [activeTab, setActiveTab] = useState<'workspace' | 'analytics' | 'security'>('workspace');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -83,24 +82,9 @@ const App: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-6">
-             <button 
-                onClick={() => setActiveTab('workspace')}
-                className={`text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'workspace' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              >
+             <div className="text-sm font-medium text-primary flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
                 <Box className="w-4 h-4" /> Workspace
-             </button>
-             <button 
-                onClick={() => setActiveTab('analytics')}
-                className={`text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'analytics' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              >
-                <Activity className="w-4 h-4" /> Analytics
-             </button>
-             <button 
-                onClick={() => setActiveTab('security')}
-                className={`text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'security' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              >
-                <ShieldCheck className="w-4 h-4" /> Security
-             </button>
+             </div>
           </div>
         </div>
 
@@ -131,37 +115,7 @@ const App: React.FC = () => {
       {/* Main Workspace */}
       <main className="flex-1 p-6 relative z-10 overflow-auto">
         <div className="max-w-[1600px] mx-auto w-full h-full">
-           {activeTab === 'workspace' && <DataDashboard />}
-           
-           {activeTab === 'analytics' && (
-              <div className="flex flex-col items-center justify-center h-[60vh] glass-panel rounded-3xl border border-white/5 p-12 text-center animate-fade-in">
-                 <div className="w-20 h-20 bg-accent/10 rounded-2xl flex items-center justify-center mb-6 border border-accent/20">
-                    <Activity className="w-10 h-10 text-accent" />
-                 </div>
-                 <h2 className="text-3xl font-bold mb-4 tracking-tight">Advanced Analytics</h2>
-                 <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    Compute complex correlations, time-series projections, and AI-driven predictive insights. This module is currently processing deep learning weights.
-                 </p>
-                 <div className="mt-8 flex gap-3">
-                    <button onClick={() => setActiveTab('workspace')} className="px-6 py-2 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-all">Back to Workspace</button>
-                 </div>
-              </div>
-           )}
-
-           {activeTab === 'security' && (
-              <div className="flex flex-col items-center justify-center h-[60vh] glass-panel rounded-3xl border border-white/5 p-12 text-center animate-fade-in">
-                 <div className="w-20 h-20 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20">
-                    <ShieldCheck className="w-10 h-10 text-emerald-500" />
-                 </div>
-                 <h2 className="text-3xl font-bold mb-4 tracking-tight">System Security</h2>
-                 <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    Manage API keys, monitor agent execution logs, and audit data access history. Your environment is protected by AES-256 bank-grade encryption.
-                 </p>
-                 <div className="mt-8 flex gap-3">
-                    <button onClick={() => setActiveTab('workspace')} className="px-6 py-2 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-all">Back to Workspace</button>
-                 </div>
-              </div>
-           )}
+           <DataDashboard />
         </div>
       </main>
 
