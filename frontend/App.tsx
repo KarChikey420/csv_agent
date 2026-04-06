@@ -58,27 +58,27 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative selection:bg-primary/20 overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative selection:bg-primary/20 overflow-hidden mesh-gradient">
       {/* Premium Ambient Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-blob" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] animate-blob animation-delay-2000" />
-        <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-purple-500/10 rounded-full blur-[120px] animate-blob animation-delay-4000" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[140px] animate-blob" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[140px] animate-blob animation-delay-2000" />
+        <div className="absolute top-[30%] left-[30%] w-[40%] h-[40%] bg-purple-600/15 rounded-full blur-[140px] animate-blob animation-delay-4000" />
         
         {/* Fine grid overlay */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-150 contrast-150 pointer-events-none"></div>
       </div>
 
       {/* Modern Navbar */}
       <nav className="h-20 glass-panel border-b border-white/5 px-8 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30 group-hover:rotate-12 transition-transform">
+            <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30 group-hover:rotate-12 transition-transform primary-glow">
               <Database className="w-6 h-6 text-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight">Data<span className="text-primary italic">Flow</span></span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">EDA Intelligence</span>
+              <span className="text-xl font-bold tracking-tight text-glow">Data<span className="text-primary italic">Flow</span></span>
+              <span className="text-[10px] text-primary/60 uppercase tracking-[0.2em] font-black">EDA Intelligence</span>
             </div>
           </div>
 

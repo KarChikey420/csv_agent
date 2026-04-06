@@ -53,28 +53,28 @@ const DataDashboard: React.FC = () => {
               <div className="absolute bottom-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
               
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-primary/10 border border-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-pulse-slow">
-                   <Database className="w-10 h-10 text-primary" />
-                </div>
-                <h2 className="text-4xl font-bold mb-4 tracking-tight">DataFlow <span className="text-primary italic">Intelligence</span></h2>
-                <p className="text-muted-foreground mb-10 text-lg">Upload your dataset to begin deep EDA analysis, outlier detection, and smart visualizations.</p>
-                
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept=".csv" 
-                  className="hidden" 
-                />
-                
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={loading}
-                  className="px-10 py-5 bg-primary text-primary-foreground rounded-2xl font-bold text-xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 mx-auto disabled:opacity-50"
-                >
-                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
-                  {loading ? "ANALYZING STRUCTURE..." : "INGEST DATASET"}
-                </button>
+                 <div className="w-24 h-24 bg-primary/10 border border-primary/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-pulse-slow primary-glow">
+                    <Database className="w-12 h-12 text-primary" />
+                 </div>
+                 <h2 className="text-5xl font-black mb-4 tracking-tighter text-glow">Data<span className="text-primary italic">Flow</span></h2>
+                 <p className="text-primary/60 mb-12 text-xl font-medium uppercase tracking-widest opacity-80">Intelligence Engine</p>
+                 
+                 <input 
+                   type="file" 
+                   ref={fileInputRef} 
+                   onChange={handleFileChange} 
+                   accept=".csv" 
+                   className="hidden" 
+                 />
+                 
+                 <button 
+                   onClick={() => fileInputRef.current?.click()}
+                   disabled={loading}
+                   className="px-12 py-6 bg-primary text-primary-foreground rounded-3xl font-black text-2xl shadow-[0_0_50px_-12px_rgba(var(--primary),0.5)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 mx-auto disabled:opacity-50"
+                 >
+                   {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Upload className="w-8 h-8" />}
+                   {loading ? "ANALYZING..." : "INGEST DATASET"}
+                 </button>
                 
                 {error && (
                   <div className="mt-8 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl flex items-center gap-3 text-destructive animate-fade-in">

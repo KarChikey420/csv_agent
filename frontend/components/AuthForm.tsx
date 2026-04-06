@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
+import { User, Mail, Lock, LogIn, UserPlus, Database } from 'lucide-react';
 import { authService, getApiErrorMessage } from '../services/apiService';
 
 interface AuthFormProps {
@@ -53,17 +53,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Ambient Background Effects */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[100px] animate-blob" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[100px] animate-blob animation-delay-2000" />
-
-      <div className="w-full max-w-md glass-panel rounded-2xl shadow-2xl p-8 relative z-10 border border-white/10">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-lg shadow-primary/20">
-            <User className="w-8 h-8 text-primary" />
+      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[120px] animate-blob" />
+      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[120px] animate-blob animation-delay-2000" />
+      
+      <div className="w-full max-w-md glass-panel rounded-[2.5rem] p-10 relative z-10 border border-white/10 primary-glow overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+        
+        <div className="text-center mb-10 relative z-10">
+          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-primary/20 shadow-2xl shadow-primary/20 group-hover:scale-110 transition-transform duration-500">
+            <Database className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">EDA Agent Platform</h1>
-          <p className="text-muted-foreground text-sm mt-2">
-            {isLogin ? 'Sign in to your account' : 'Create your account'}
+          <h1 className="text-3xl font-black text-foreground tracking-tighter text-glow">Data<span className="text-primary italic">Flow</span></h1>
+          <p className="text-primary/60 text-[10px] uppercase tracking-[0.3em] font-bold mt-2">
+            AI Intelligence Platform
           </p>
         </div>
 
@@ -130,14 +132,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 mt-8"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                {isLogin ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-                {isLogin ? 'Sign In' : 'Sign Up'}
+                {isLogin ? <LogIn className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
+                {isLogin ? 'SIGN IN' : 'CREATE ACCOUNT'}
               </>
             )}
           </button>
