@@ -5,7 +5,7 @@ const resolveApiBaseUrl = () => {
   const configuredBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL;
 
   if (typeof window === 'undefined') {
-    return configuredBaseUrl || 'http://127.0.0.1:8000';
+    return configuredBaseUrl || 'https://csv-agent-72hj.onrender.com';
   }
 
   const browserHost = window.location.hostname || 'localhost';
@@ -14,7 +14,10 @@ const resolveApiBaseUrl = () => {
     return configuredBaseUrl.replace(/\/$/, '');
   }
 
-  return `${window.location.protocol}//${browserHost}:8000`;
+  // If we're on localhost but no env var is set, default to the production backend 
+  // or a local one if the user is developing locally.
+  // Given the user's request, we'll default to the Render URL.
+  return 'https://csv-agent-72hj.onrender.com';
 };
 
 const API_BASE_URL = resolveApiBaseUrl();

@@ -119,7 +119,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
 
           {isBackendOff && (
             <div className="text-amber-500 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 animate-pulse">
-              ⚠️ Backend appears to be offline. Please ensure the server is running on port 8000.
+              ⚠️ Backend appears to be offline. The Render service may be spinning up (this can take 30-60s).
             </div>
           )}
 
