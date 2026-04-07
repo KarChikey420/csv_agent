@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Loader2, User, Bot, Paperclip, X, Image as ImageIcon } from 'lucide-react';
+import { Send, Loader2, User, Bot, Paperclip, X } from 'lucide-react';
 import { agentService, getApiErrorMessage } from '../services/apiService';
 
 interface Message {
@@ -20,7 +20,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I am DataFlow, your AI data analyst. Upload a CSV to begin our analysis.',
+      content: 'Hello! I am DataFlow, your AI data analyst. What would you like to explore about your data?',
       timestamp: new Date()
     }
   ]);
@@ -49,8 +49,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
     setLoading(true);
 
     try {
-      // If we have a datasetId, we don't need to send the raw file again.
-      // This prevents net::ERR_UPLOAD_FILE_CHANGED.
       const response = await agentService.chat(
         input, 
         datasetId ? undefined : (selectedFile || undefined),
@@ -65,7 +63,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
     } catch (err) {
       const errorMessage: Message = {
         role: 'assistant',
-        content: `Error: ${getApiErrorMessage(err)}`,
+        content: `**Error:** ${getApiErrorMessage(err)}`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -75,54 +73,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
   };
 
   return (
-    <div className="flex flex-col h-full glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-      {/* Chat Header */}
-      <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
-            <Bot className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-bold text-foreground">DataFlow AI</h3>
-            <p className="text-[10px] text-primary font-mono uppercase tracking-widest">Active Analysis Session</p>
-          </div>
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full bg-white/[0.02] backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative group">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+      
       {/* Messages Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
+        className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent relative z-10"
       >
         {messages.map((msg, idx) => (
           <div 
             key={idx} 
-            className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
+            className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in group/msg`}
           >
-            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border ${
+            <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center border shadow-lg ${
               msg.role === 'user' 
-                ? 'bg-secondary border-white/10' 
-                : 'bg-primary/10 border-primary/20'
+                ? 'bg-[#18181b] border-white/10 text-slate-300' 
+                : 'bg-primary/20 border-primary/30 text-primary'
             }`}>
-              {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5 text-primary" />}
+              {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
             </div>
             
-            <div className={`max-w-[80%] px-5 py-4 rounded-2xl text-sm leading-relaxed ${
+            <div className={`max-w-[85%] px-6 py-4 rounded-[1.5rem] text-[15px] leading-relaxed shadow-xl ${
               msg.role === 'user' 
-                ? 'bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/20' 
-                : 'glass-card border border-white/5 text-foreground/90'
+                ? 'bg-primary text-white font-medium shadow-primary/20 rounded-tr-sm' 
+                : 'bg-[#18181b]/80 border border-white/10 text-slate-200 rounded-tl-sm backdrop-blur-md'
             }`}>
-              <div className="prose prose-invert prose-sm max-w-none">
+              <div className="prose prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-a:text-accent prose-sm max-w-none">
                 <ReactMarkdown
-                   urlTransform={(uri) => 
-                     uri.startsWith('data:image/') ? uri : uri
-                   }
+                   urlTransform={(uri) => uri}
                    components={{
                     img: ({ node, ...props }) => (
-                      <div className="my-4 rounded-xl overflow-hidden border border-white/10 shadow-xl group relative">
-                         <img {...props} className="w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]" />
-                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="px-2 py-1 bg-black/60 backdrop-blur-md rounded text-[10px] uppercase font-bold tracking-tight">AI Generated Visualize</span>
+                      <div className="my-5 rounded-2xl overflow-hidden border border-white/10 shadow-2xl group/img relative">
+                         <img {...props} className="w-full h-auto" />
+                         <div className="absolute top-3 right-3 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                            <span className="px-3 py-1.5 bg-black/80 backdrop-blur-xl rounded-lg text-[10px] uppercase font-bold tracking-widest text-primary border border-primary/20">Data Visualization</span>
                          </div>
                       </div>
                     )
@@ -131,65 +116,72 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
                   {msg.content}
                 </ReactMarkdown>
               </div>
-              <div className={`text-[10px] mt-2 opacity-50 ${msg.role === 'user' ? 'text-right' : ''}`}>
+              <div className={`text-[10px] mt-3 font-mono opacity-0 group-hover/msg:opacity-50 transition-opacity ${msg.role === 'user' ? 'text-right text-primary-foreground' : 'text-slate-500'}`}>
                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </div>
         ))}
+        
         {loading && (
-          <div className="flex gap-4 animate-pulse">
-            <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary/40" />
+          <div className="flex gap-4 animate-fade-in items-end">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center animate-pulse">
+              <Bot className="w-5 h-5 text-primary/50" />
             </div>
-            <div className="glass-card border border-white/5 px-6 py-4 rounded-2xl flex items-center gap-3">
-              <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Analysing Data...</span>
+            <div className="bg-[#18181b]/80 border border-white/10 px-6 py-5 rounded-[1.5rem] rounded-tl-sm flex items-center gap-3 backdrop-blur-md max-w-[85%] shadow-xl">
+               <div className="flex space-x-1.5 items-center">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+               </div>
+               <span className="text-xs text-slate-400 font-medium ml-2">Reasoning...</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="p-6 bg-white/5 border-t border-white/5">
-        <form onSubmit={handleSend} className="relative flex items-center gap-3">
+      {/* Modern Floating Input Area */}
+      <div className="p-4 lg:p-6 bg-transparent relative z-10 w-full mb-2">
+        <form onSubmit={handleSend} className="relative flex flex-col items-center">
           {selectedFile && (
-            <div className="absolute -top-12 left-0 flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full animate-fade-in">
-              <Paperclip className="w-3 h-3 text-primary" />
-              <span className="text-[10px] font-bold text-primary truncate max-w-[150px] uppercase tracking-tight">{selectedFile.name}</span>
-              <button 
-                type="button" 
-                onClick={onFileRemove}
-                className="hover:text-destructive transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            <div className="w-full flex mb-2 px-2 animate-fade-in">
+               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#18181b] border border-white/10 rounded-full shadow-lg">
+                  <Paperclip className="w-3.5 h-3.5 text-accent" />
+                  <span className="text-[11px] font-mono text-slate-300 truncate max-w-[150px] uppercase">{selectedFile.name}</span>
+                  <button 
+                  type="button" 
+                  onClick={onFileRemove}
+                  className="w-5 h-5 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-white"
+                  >
+                  <X className="w-3 h-3" />
+                  </button>
+               </div>
             </div>
           )}
           
-          <div className="flex-1 relative group">
-             <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={selectedFile ? "Ask DataFlow about this dataset..." : "Upload a CSV to start..."}
-                disabled={loading}
-                className="w-full bg-black/40 border border-white/10 rounded-2xl pl-5 pr-12 py-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                 <button 
-                    type="submit"
-                    disabled={(!input.trim() && !loading) || loading}
-                    className="p-2 bg-primary rounded-xl text-primary-foreground shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all"
-                 >
-                   <Send className="w-5 h-5" />
-                 </button>
+          <div className="w-full relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-[2rem] blur opacity-20 group-focus-within:opacity-50 transition duration-500"></div>
+              <div className="relative flex items-center bg-[#0a0515] border border-white/10 rounded-[2rem] shadow-2xl p-1.5">
+                 <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Message DataFlow AI..."
+                    disabled={loading}
+                    className="w-full bg-transparent text-white pl-6 pr-14 py-4 text-[15px] focus:outline-none transition-all placeholder:text-slate-500 font-medium"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                     <button 
+                        type="submit"
+                        disabled={(!input.trim() && !loading) || loading}
+                        className="w-10 h-10 bg-primary/20 hover:bg-primary border border-primary/30 hover:border-primary text-primary hover:text-white rounded-full flex items-center justify-center disabled:opacity-40 disabled:hover:bg-primary/20 disabled:hover:text-primary transition-all duration-300 shadow-lg primary-glow disabled:shadow-none"
+                     >
+                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 ml-0.5" />}
+                     </button>
+                  </div>
               </div>
           </div>
         </form>
-        <p className="text-[10px] text-center mt-4 text-muted-foreground uppercase tracking-[0.2em] font-medium opacity-50">
-          Powered by DataFlow Reasoning Engine
-        </p>
       </div>
     </div>
   );
