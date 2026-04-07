@@ -15,6 +15,7 @@ import uvicorn
 import logging
 import time
 import numpy as np
+import openai
 
 from .dbsetup.database import SessionLocal, User, Dataset, AnalysisHistory, get_db, init_db
 from .dbsetup.auth import create_access_token, current_user
@@ -228,6 +229,12 @@ async def chat(
         return {"response": response}
     except HTTPException:
         raise
+    except openai.APITimeoutError:
+        logger.error("OSS API Timeout in chat endpoint")
+        raise HTTPException(504, "The AI engine is taking too long to respond. This is usually due to high traffic on the AI server. Please try again in a few seconds.")
+    except openai.APIConnectionError:
+        logger.error("OSS API Connection Error in chat endpoint")
+        raise HTTPException(502, "Could not connect to the AI engine. Please check your network or try again later.")
     except Exception as e:
         logger.error(f"Error in chat endpoint: {str(e)}")
         if "quota" in str(e).lower() or "429" in str(e):
@@ -270,6 +277,14 @@ async def multi_agent_endpoint(
         response = await run_in_threadpool(run_multi_agent, query, file_path)
         background_tasks.add_task(cleanup_temp_files)
         return {"response": response}
+    except HTTPException:
+        raise
+    except openai.APITimeoutError:
+        logger.error("OSS API Timeout in multi-agent endpoint")
+        raise HTTPException(504, "The multi-agent engine is taking too long to respond. Please try again.")
+    except openai.APIConnectionError:
+        logger.error("OSS API Connection Error in multi-agent endpoint")
+        raise HTTPException(502, "Could not connect to the multi-agent engine. Check your connection.")
     except Exception as e:
         logger.error(f"Error in multi_agent_endpoint: {str(e)}")
         raise HTTPException(500, f"Multi-agent failed: {str(e)}")
@@ -279,7 +294,11 @@ def memory_agent_endpoint(request: ChatRequest, db: Session = Depends(get_db), u
     try:
         response = run_memory_chat(request.query)
         return {"response": response}
+    except openai.APITimeoutError:
+        logger.error("OSS API Timeout in memory agent")
+        raise HTTPException(504, "Memory retrieval timed out. Please try again.")
     except Exception as e:
+        logger.error(f"Error in memory_agent_endpoint: {str(e)}")
         raise HTTPException(500, f"Memory agent failed: {str(e)}")
 
 @app.get("/api/plots/{filename}")
@@ -290,8 +309,8 @@ async def serve_plot(filename: str):
         return FileResponse(file_path, media_type="image/png")
     raise HTTPException(404, f"Plot not found: {filename}")
 
-@app.post("/gemma/chat")
-async def gemma_chat(request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
+@app.post("/oss/chat")
+async def oss_chat(request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
     try:
         from .llm_loder.llm import load_llm
         payload = await request.json()
@@ -305,8 +324,12 @@ async def gemma_chat(request: Request, db: Session = Depends(get_db), user: User
             response = await run_in_threadpool(llm.invoke, payload["messages"])
         
         return {"choices": [{"message": {"content": response.content, "role": "assistant"}}]}
+    except openai.APITimeoutError:
+        logger.error("OSS API Timeout in chat endpoint")
+        raise HTTPException(504, "Target AI engine timed out.")
     except Exception as e:
-        raise HTTPException(500, f"Gemma endpoint failed: {str(e)}")
+        logger.error(f"Error in oss_chat: {str(e)}")
+        raise HTTPException(500, f"OSS endpoint failed: {str(e)}")
 
 @app.get("/api/me")
 def get_user_profile(user: User = Depends(current_user)):

@@ -10,7 +10,17 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True, 
-    connect_args={"sslmode": "require", "connect_timeout": 10}
+    pool_recycle=300, # Recycle connections every 5 minutes
+    pool_size=10,      # Default pool size
+    max_overflow=20,   # Allow up to 20 additional connections
+    connect_args={
+        "sslmode": "require", 
+        "connect_timeout": 10,
+        "keepalives": 1,           # Enable TCP keepalives
+        "keepalives_idle": 30,      # IDLE time before probes start
+        "keepalives_interval": 10,  # Interval between probes
+        "keepalives_count": 5       # Max probes before failure
+    }
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

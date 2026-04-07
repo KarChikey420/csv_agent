@@ -29,7 +29,7 @@ export const getAgentResponse = async (
       thinking: "" 
     };
   } catch (error) {
-    console.error("API Error:", error);
+    console.error("OSS API Error:", error);
     throw error;
   }
 };

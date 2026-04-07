@@ -65,7 +65,7 @@ const App: React.FC = () => {
         <div className="absolute top-[30%] left-[30%] w-[40%] h-[40%] bg-purple-600/15 rounded-full blur-[140px] animate-blob animation-delay-4000" />
         
         {/* Fine grid overlay */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-150 contrast-150 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-transparent opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
       </div>
 
       {/* Modern Navbar */}

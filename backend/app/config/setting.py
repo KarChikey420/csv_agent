@@ -3,9 +3,9 @@ import os
 
 load_dotenv()
 
-GEMMA_API_KEY = os.getenv("goggle-gema4") or os.getenv("GEMMA_API_KEY")
-MODEL_NAME = "google/gemma-4-31b-it"
-GEMMA_BASE_URL = os.getenv("GEMMA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+OSS_API_KEY = os.getenv("openApi-oss") or os.getenv("goggle-gema4") or os.getenv("GEMMA_API_KEY")
+OSS_MODEL_NAME = os.getenv("MODEL_NAME", "meta/llama-3.1-8b-instruct")
+OSS_BASE_URL = os.getenv("GEMMA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 EMBED_MODEL = "models/text-embedding-004"
 
 # Security & CORS
