@@ -15,7 +15,7 @@ DEFAULT_ORIGINS = ",".join([
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://csv-agent-72hj.onrender.com",
-    "https://csv-agent-frontend.onrender.com",
+    "https://csv-agent-five.vercel.app",
 ])
 ALLOWED_ORIGINS = [
     origin.strip()
@@ -32,6 +32,7 @@ DEV_CORS_ORIGIN_REGEX = os.getenv(
     r"|192\.168\.\d{1,3}\.\d{1,3}"
     r"|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
     r"|.*\.onrender\.com"
+    r"|.*\.vercel\.app"
     r")(:\d+)?$",
 )
 
