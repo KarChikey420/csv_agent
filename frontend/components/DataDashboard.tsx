@@ -53,8 +53,8 @@ const DataDashboard: React.FC = () => {
               <div className="absolute bottom-[-20%] right-[-20%] w-64 h-64 bg-accent/20 rounded-full blur-[100px] group-hover:bg-accent/30 transition-colors duration-700" />
               
               <div className="relative z-10">
-                 <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(var(--primary),0.2)]">
-                    <Database className="w-12 h-12 text-primary drop-shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                 <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_hsl(var(--primary)/0.2)]">
+                    <Database className="w-12 h-12 text-primary drop-shadow-[0_0_10px_hsl(var(--primary)/0.5)]" />
                  </div>
                  
                  <h2 className="text-5xl font-extrabold mb-3 tracking-tighter text-white">
@@ -75,9 +75,9 @@ const DataDashboard: React.FC = () => {
                    disabled={loading}
                    className="group relative px-10 py-5 bg-primary text-primary-foreground rounded-2xl font-bold text-lg shadow-[0_0_30px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.5)] active:scale-[0.98] transition-all flex items-center justify-center gap-4 mx-auto disabled:opacity-50 overflow-hidden"
                  >
-                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                   <div className="absolute inset-0 bg-white/20 tranzinc-y-full group-hover:tranzinc-y-0 transition-transform duration-300 ease-out" />
                    <span className="relative z-10 flex items-center gap-3">
-                      {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6 group-hover:-translate-y-1 transition-transform" />}
+                      {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6 group-hover:-tranzinc-y-1 transition-transform" />}
                       {loading ? "INITIALIZING DATA..." : "INGEST DATASET"}
                    </span>
                  </button>
@@ -92,12 +92,12 @@ const DataDashboard: React.FC = () => {
                   </div>
                 )}
                 
-                <div className="mt-14 flex items-center justify-center gap-8 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                   <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-slate-700" /> Visualizations</div>
-                   <div className="w-1 h-1 bg-slate-700 rounded-full" />
-                   <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-slate-700" /> Anomalies</div>
-                   <div className="w-1 h-1 bg-slate-700 rounded-full" />
-                   <div className="flex items-center gap-2"><Bot className="w-4 h-4 text-slate-700" /> AI Insights</div>
+                <div className="mt-14 flex items-center justify-center gap-8 text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+                   <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-zinc-700" /> Visualizations</div>
+                   <div className="w-1 h-1 bg-zinc-700 rounded-full" />
+                   <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-zinc-700" /> Anomalies</div>
+                   <div className="w-1 h-1 bg-zinc-700 rounded-full" />
+                   <div className="flex items-center gap-2"><Bot className="w-4 h-4 text-zinc-700" /> AI Insights</div>
                 </div>
               </div>
            </div>
@@ -114,7 +114,7 @@ const DataDashboard: React.FC = () => {
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
                            activeTab === 'workshop' 
                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-100' 
-                           : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'
+                           : 'text-zinc-400 hover:text-white hover:bg-white/5 scale-95'
                         }`}
                      >
                         <Database className="w-4 h-4" /> Data Workshop
@@ -124,7 +124,7 @@ const DataDashboard: React.FC = () => {
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
                            activeTab === 'intelligence' 
                            ? 'bg-accent text-accent-foreground shadow-lg shadow-accent/20 scale-100' 
-                           : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'
+                           : 'text-zinc-400 hover:text-white hover:bg-white/5 scale-95'
                         }`}
                      >
                         <Brain className="w-4 h-4" /> AI Intelligence
@@ -133,7 +133,7 @@ const DataDashboard: React.FC = () => {
                   
                   <button 
                      onClick={handleReset}
-                     className="group flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 transition-all shadow-md"
+                     className="group flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive rounded-xl text-xs font-bold uppercase tracking-wider text-zinc-400 transition-all shadow-md"
                   >
                      <Eraser className="w-4 h-4 group-hover:rotate-12 transition-transform" /> New Session
                   </button>
@@ -159,7 +159,7 @@ const DataDashboard: React.FC = () => {
                   </div>
                   <div>
                      <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        Query Engine <ChevronRight className="w-4 h-4 text-slate-500" />
+                        Query Engine <ChevronRight className="w-4 h-4 text-zinc-500" />
                      </h2>
                   </div>
                </div>

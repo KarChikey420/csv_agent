@@ -88,7 +88,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
           >
             <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center border shadow-lg ${
               msg.role === 'user' 
-                ? 'bg-[#18181b] border-white/10 text-slate-300' 
+                ? 'bg-zinc-900 border-white/10 text-zinc-300' 
                 : 'bg-primary/20 border-primary/30 text-primary'
             }`}>
               {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
@@ -96,8 +96,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
             
             <div className={`max-w-[85%] px-6 py-4 rounded-[1.5rem] text-[15px] leading-relaxed shadow-xl ${
               msg.role === 'user' 
-                ? 'bg-primary text-white font-medium shadow-primary/20 rounded-tr-sm' 
-                : 'bg-[#18181b]/80 border border-white/10 text-slate-200 rounded-tl-sm backdrop-blur-md'
+                ? 'bg-primary text-black font-medium shadow-primary/20 rounded-tr-sm' 
+                : 'bg-zinc-900/80 border border-white/10 text-zinc-200 rounded-tl-sm backdrop-blur-md'
             }`}>
               <div className="prose prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-a:text-accent prose-sm max-w-none">
                 <ReactMarkdown
@@ -128,13 +128,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
             <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center animate-pulse">
               <Bot className="w-5 h-5 text-primary/50" />
             </div>
-            <div className="bg-[#18181b]/80 border border-white/10 px-6 py-5 rounded-[1.5rem] rounded-tl-sm flex items-center gap-3 backdrop-blur-md max-w-[85%] shadow-xl">
+            <div className="bg-zinc-900/80 border border-white/10 px-6 py-5 rounded-[1.5rem] rounded-tl-sm flex items-center gap-3 backdrop-blur-md max-w-[85%] shadow-xl">
                <div className="flex space-x-1.5 items-center">
                   <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                   <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                   <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
                </div>
-               <span className="text-xs text-slate-400 font-medium ml-2">Reasoning...</span>
+               <span className="text-xs text-zinc-400 font-medium ml-2">Reasoning...</span>
             </div>
           </div>
         )}
@@ -145,13 +145,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
         <form onSubmit={handleSend} className="relative flex flex-col items-center">
           {selectedFile && (
             <div className="w-full flex mb-2 px-2 animate-fade-in">
-               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#18181b] border border-white/10 rounded-full shadow-lg">
+               <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-white/10 rounded-full shadow-lg">
                   <Paperclip className="w-3.5 h-3.5 text-accent" />
-                  <span className="text-[11px] font-mono text-slate-300 truncate max-w-[150px] uppercase">{selectedFile.name}</span>
+                  <span className="text-[11px] font-mono text-zinc-300 truncate max-w-[150px] uppercase">{selectedFile.name}</span>
                   <button 
                   type="button" 
                   onClick={onFileRemove}
-                  className="w-5 h-5 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-white"
+                  className="w-5 h-5 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors text-zinc-500 hover:text-white"
                   >
                   <X className="w-3 h-3" />
                   </button>
@@ -161,14 +161,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedFile, datasetId, 
           
           <div className="w-full relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-[2rem] blur opacity-20 group-focus-within:opacity-50 transition duration-500"></div>
-              <div className="relative flex items-center bg-[#0a0515] border border-white/10 rounded-[2rem] shadow-2xl p-1.5">
+              <div className="relative flex items-center bg-[#050505] border border-white/10 rounded-[2rem] shadow-2xl p-1.5">
                  <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Message DataFlow AI..."
                     disabled={loading}
-                    className="w-full bg-transparent text-white pl-6 pr-14 py-4 text-[15px] focus:outline-none transition-all placeholder:text-slate-500 font-medium"
+                    className="w-full bg-transparent text-white pl-6 pr-14 py-4 text-[15px] focus:outline-none transition-all placeholder:text-zinc-500 font-medium"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                      <button 

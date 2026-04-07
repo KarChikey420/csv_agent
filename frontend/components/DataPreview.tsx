@@ -19,7 +19,7 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
             <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/20 flex items-center justify-center">
                <Layers className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Observations</span>
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Observations</span>
           </div>
           <p className="text-4xl font-black text-white relative z-10 tracking-tight">{shape[0].toLocaleString()}</p>
         </div>
@@ -30,7 +30,7 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
             <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/20 flex items-center justify-center">
                <ClipboardList className="w-4 h-4 text-accent" />
             </div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Features</span>
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Features</span>
           </div>
           <p className="text-4xl font-black text-white relative z-10 tracking-tight">{shape[1]}</p>
         </div>
@@ -38,10 +38,10 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
         <div className="bg-white/[0.03] backdrop-blur-xl p-5 rounded-2xl border border-white/10 relative overflow-hidden group shadow-lg">
           <div className="absolute top-[-20%] right-[-10%] w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 group-hover:scale-150 transition-all duration-700" />
           <div className="flex items-center gap-3 mb-3 relative z-10">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/20 flex items-center justify-center">
-               <Hash className="w-4 h-4 text-blue-400" />
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/20 flex items-center justify-center">
+               <Hash className="w-4 h-4 text-amber-500" />
             </div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Numeric Col</span>
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Numeric Col</span>
           </div>
           <p className="text-4xl font-black text-white relative z-10 tracking-tight">
             {Object.values(stats?.data_types || {}).filter((t: any) => t.includes('int') || t.includes('float')).length}
@@ -51,10 +51,10 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
         <div className="bg-white/[0.03] backdrop-blur-xl p-5 rounded-2xl border border-white/10 relative overflow-hidden group shadow-lg">
           <div className="absolute bottom-[-20%] left-[-10%] w-24 h-24 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 group-hover:scale-150 transition-all duration-700" />
           <div className="flex items-center gap-3 mb-3 relative z-10">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/20 flex items-center justify-center">
-               <Info className="w-4 h-4 text-purple-400" />
+            <div className="w-8 h-8 rounded-lg bg-zinc-500/20 border border-zinc-500/20 flex items-center justify-center">
+               <Info className="w-4 h-4 text-zinc-400" />
             </div>
-             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Missing Val</span>
+             <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Missing Val</span>
           </div>
           <p className="text-4xl font-black text-white relative z-10 tracking-tight">
             {(Object.values(stats?.missing_values || {}) as any[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0)}
@@ -82,12 +82,12 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
 
         <div className="flex-1 overflow-auto p-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent relative z-10">
           <table className="w-full text-left border-collapse min-w-max">
-            <thead className="sticky top-0 bg-[#0a0515] border-b border-white/10 z-20 shadow-md">
+            <thead className="sticky top-0 bg-background border-b border-white/10 z-20 shadow-md">
               <tr>
                 {columns.map((col, idx) => (
                   <th key={idx} className="px-6 py-4 border-r border-white/5 last:border-r-0">
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-xs font-bold text-slate-200 uppercase tracking-widest">{col}</span>
+                      <span className="text-xs font-bold text-zinc-200 uppercase tracking-widest">{col}</span>
                       <span className="text-[10px] font-mono text-primary/80 uppercase px-2 py-0.5 bg-primary/10 rounded w-max border border-primary/20">
                          {stats?.data_types?.[col]?.split('.').pop() || 'unknown'}
                       </span>
